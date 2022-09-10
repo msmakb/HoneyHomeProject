@@ -1,0 +1,41 @@
+{% extends base %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+
+<h2>Weekly Evaluation </h2>
+
+{% for message in messages %}
+<div class="alert alert-success" role="alert" style="width: 100%; height: 50px;">
+    <p style="text-align: center;">{{ message }}</p>
+</div> 
+{% endfor %}
+
+<table style="text-align:center;" class="table table-striped">
+    <thead>
+    <tr>
+        <th scope="col">NAME</th>
+        <th scope="col">GENDER</th>
+        <th scope="col">NATIONALITY</th>
+        <th scope="col">POSITION</th>
+        <th scope="col">RATE</th>
+    </tr>
+    </thead>
+    <tbody>
+    <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% for Employee in Employees %}
+    <tr>
+        <td>{{Employee.person.name}}</td>
+        <td>{{Employee.person.gender}}</td>
+        <td>{{Employee.person.nationality}}</td>
+        <td>{{Employee.position}}</td>
+        <td><div style="width: 70%; margin: auto;"><input class="form-control" type="number" name="val{{Employee.id}}" min="1" max="5" value="5"></div></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+<center>
+    <button type="submit" class="btn btn-info">Rate</button>
+    </form>
+</center>
+{% endblock %}

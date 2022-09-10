@@ -1,0 +1,18 @@
+{% extends base %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div >
+  <div class="modal-body">
+    <p>Are you sure you want to delete employee</p>
+    <p>Employee Name: {{Employee.person.name}}</p>
+    <p>Position: {{Employee.position}}</p>
+  </div>
+  <div class="modal-footer">
+    <a href="{% url 'EmployeePage' Employee.id %}" class="btn btn-secondary">Close</a>
+    <form method="POST">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-xs btn-outline-danger">Delete</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

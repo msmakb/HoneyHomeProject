@@ -1,0 +1,34 @@
+
+{% for g in request.user.groups.all %}
+    {% if g.name != "Distributor" %}
+        {% for -, Task in TasksModel.main.Tasks.items %}
+        <div class="card w-100" style="margin-bottom: 5px;">
+            <div class="card-body">
+                <h5 class="card-title">{{Task.name}}</h5>
+                <p class="card-text">{{Task.description}}</p>
+                <a href="{% url 'Tasks' %}" class="btn btn-info">View Task</a>
+                {% if Task.time_left != 'Declined' %}
+                <span style="color: green;">{{Task.time_left}}</span>
+                {% else %}
+                <span style="color: red;">{{Task.time_left}}</span>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="card w-100" style="margin-bottom: 5px;">
+            <div class="card-body">
+                <h5 class="card-title" style="text-align: center;">No Tasks</h5>
+                <p class="card-text" style="text-align: center;">Congratulations, you don't have any Tasks</p>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="card w-100" style="margin-bottom: 5px;">
+        <div class="card-body">
+            <h5 class="card-title" style="text-align: center;">Welcome {{request.user.first_name}}</h5>
+            <p class="card-text" style="text-align: center;">Please contact the human resources if you need help</p>
+        </div>
+    </div>
+    {% endif %}
+{% endfor %}
+

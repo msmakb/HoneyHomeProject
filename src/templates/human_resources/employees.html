@@ -1,0 +1,34 @@
+{% extends base %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+{% load hr_tags %}
+<div style="float: right;">
+    <td><a id="button" class="btn btn-xs btn-info" href="{% url 'AddEmployeePage' %}">Add Employee</a></td>
+</div>
+<h2>Employees</h2>
+<table style="text-align:center;" class="table table-striped">
+    <thead>
+    <tr>
+        <th scope="col">NAME</th>
+        <th scope="col">GENDER</th>
+        <th scope="col">POSITION</th>
+        <th scope="col">NATIONALITY</th>
+        <th scope="col">OVERALL EVALUATION</th>
+        <th scope="col">RECORD</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for employee in Employees %}
+    <tr>
+        <td>{{employee.person.name}}</td>
+        <td>{{employee.person.gender}}</td>
+        <td>{{employee.position}}</td>
+        <td>{{employee.person.nationality}}</td>
+        <td>{% getAllTimeEvaluation employee.id %}</td>
+        <td><a class="btn btn-sm btn-info" href="{% url 'EmployeePage' employee.id %}">View</a></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
+

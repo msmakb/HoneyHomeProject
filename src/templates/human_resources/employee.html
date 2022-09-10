@@ -1,0 +1,151 @@
+{% extends base %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+
+<style>
+	.dot_green {
+		height: 10px;
+		width: 10px;
+		background-color: green;
+		border-radius: 50%;
+		display: inline-block;
+	}
+	.dot_red {
+		height: 10px;
+		width: 10px;
+		background-color: red;
+		border-radius: 50%;
+		display: inline-block;
+	}
+</style>
+
+<div class="form-group" style="padding: 20px; width: 90%; margin: auto;">
+    <div class="form-control"><h4 style="text-align: center;">Employee Record</h4></div>
+</div>
+<div class="row">
+	<div class="col-md">
+		<div class="col-md">
+			<div class="card card-body">
+				<h5>Employee:</h5>
+				<hr>
+				<a class="btn btn-outline-info  btn-sm btn-block" href="{% url 'UpdateEmployeePage' Employee.id %}">Update Employee</a>
+				<a class="btn btn-outline-danger  btn-sm btn-block" href="{% url 'DeleteEmployeePage' Employee.id %}">Delete Employee</a>
+			</div>
+		</div>
+		<div class="col-md">
+			<div class="card card-body" style="margin-top: 20px;">
+				<h5>Address Information</h5>
+				<hr>
+				<p>Address: {{Employee.person.address}}</p>
+			</div>
+		</div>
+		
+	</div>
+
+	<div class="col-md">
+		<div class="col-md">
+			<div class="card card-body">
+				<h5>Contact Information</h5>
+				<hr>
+				<p>Email: {{Employee.person.contacting_email}}</p>
+				<p>Phone: {{Employee.person.phone_number}}</p>
+			</div>
+		</div>
+		<div class="col-md">
+			<div class="card card-body" style="margin-top: 10px;">
+				<h5>System Account Information</h5>
+				<hr>
+				<p>Username: {{Employee.account}}</p>
+				<p>Email: {{Employee.account.email}}</p>
+			</div>
+		</div>
+	</div>
+
+	<div class="card" style="width: 18rem;">
+		{% if Employee.person.gender != 'Female' %}
+		<label for="file-input"><img class="card-img-top" src="/media/images/default_profile_image_male.png" alt="Card image cap"></label>
+		{% else %}
+		<label for="file-input"><img class="card-img-top" src="/media/images/default_profile_image_female.png" alt="Card image cap"></label>
+		{% endif %}
+		<input type="file" id="file-input" style="display: none;">
+		<div class="card-body">
+            <p class="card-text" style="text-align: center;">
+				{% if Employee.account.is_active %}
+				<span class="dot_green"></span>
+				{% else %}
+				<span class="dot_red"></span>
+				{% endif %}
+				{{Employee.person.name}}
+			</p>
+            <p class="card-text" style="text-align: center;">{{Employee.position}}</p>
+
+        </div>
+    </div>
+</div>
+
+<div class="row">
+	<div style="width: 50%;">
+		<div class="card" style="margin-right: 50px; margin-left: 30px; margin-top: 20px;">
+			<div class="card-body">
+				<p>Other Info</p>
+				<hr>
+				<p>Date of Birth: {{Employee.person.date_of_birth}}</p>
+				<p>Gender: {{Employee.person.gender}}</p>
+				<p>Register Date: {{Employee.account.date_joined}}</p>
+				<p>Last Login: {{Employee.account.last_login}}</p>
+			</div>
+		</div>
+	</div>
+
+	<div style="width: 50%;">
+		<div class="card" style="margin-right: 50px; margin-top: 20px;">
+			<div class="card-body">
+				<p>Evaluation</p>
+				<hr>
+				<table>
+					<colgroup>
+						<col width="4%"><col width="4%">
+						<col width="4%"><col width="4%">
+						<col width="4%"><col width="4%">
+						<col width="4%"><col width="4%">
+						<col width="4%"><col width="4%">
+						<col width="4%"><col width="4%">
+						<col width="4%"><col width="4%">
+						<col width="4%"><col width="4%">
+						<col width="4%"><col width="4%">
+						<col width="4%"><col width="4%">
+						<col width="4%"><col width="4%">
+						<col width="4%"><col width="4%">
+						<col width="4%"><col width="4%">
+						<col width="5%"><col width="5%">
+					</colgroup>
+					<tbody>
+						<tr>
+							<td colspan=13>Employee Overall Evaluation:</td>	
+							<td>{{Evaluation.AllTimeEvaluation}}</td>
+						</tr>	
+						<tr>
+							<td colspan=13>Employee Last Month Overall Evaluation: </td>
+							<td>{{Evaluation.MonthlyOverallEvaluation}}</td>	
+						</tr>	
+						<tr>
+							<td colspan=13>Employee Last Month Evaluation:</td>	
+							<td>{{Evaluation.MonthlyRate}}</td>
+						</tr>	
+						<tr>
+							<td colspan=13>Employee last Month Task Evaluation:</td>	
+							<td>{{Evaluation.MonthlyTaskRate}}</td>
+						</tr>	
+						<tr>
+							<td colspan=13>Employee Last Week Evaluation:</td>	
+							<td>{{Evaluation.WeeklyRate}}</td>
+						</tr>	
+					</tbody>	
+				</table>
+			</div>
+		</div>
+	</div>
+
+</div>
+
+{% endblock %}
