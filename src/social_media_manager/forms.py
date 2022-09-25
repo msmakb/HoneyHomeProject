@@ -2,7 +2,7 @@ from django import forms
 from django.forms import ModelForm
 from main.models import Person
 from .models import Customer, Questionnaire
-from social_media_manager import models
+
 
 class DateInput(forms.DateInput):
     input_type = 'date'

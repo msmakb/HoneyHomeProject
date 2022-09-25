@@ -20,12 +20,12 @@
   </button>
   <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
     <div class="navbar-nav">
-      <a class="nav-item nav-link active" href="/">Home</a>
-      <a class="nav-item nav-link active" href="/about">About</a>
+      <a class="nav-item nav-link active" href="{% url 'Index' %}">Home</a>
+      <a class="nav-item nav-link active" href="{% url 'About' %}">About</a>
     </div>
   </div>
   {% if request.user.is_authenticated %}
     <span class='hellomessage'>Hello, {{request.user}}</span>
-    <span ><a class='logout' href="{% url 'logout' %}">logout</a></span>
+    <span ><a class='logout' href="{% url 'Logout' %}">logout</a></span>
   {% endif %}
 </nav>

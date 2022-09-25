@@ -3,13 +3,13 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
-from .decorators import unauthenticaredUser
-from .models import Employee, Task
-from .tasks import TasksModel
-from .utils import getUserBaseTemplate
+from human_resources.models import Employee, Task
+from .decorators import isAuthenticatedUser
+from .tasks import getEmployeesTasks
+from .utils import getUserBaseTemplate as base
 
-# Create your views here.
-@unauthenticaredUser
+
+@isAuthenticatedUser
 def index(request):
     if request.method == "POST":
         UserName = request.POST.get('user_name')
@@ -18,9 +18,9 @@ def index(request):
 
         if User is not None:
             login(request, User)
-            return redirect('index')
+            return redirect('Index')
         else:
-            messages.info(request, "Username or Password is incoorect")
+            messages.info(request, "Username or Password is incorrect")
 
     return render(request, 'index.html')
 
@@ -30,8 +30,8 @@ def about(request):
 def unauthorized(request):
     return render(request, 'unauthorized.html')
 
-@login_required(login_url='index')
-def Dashboard(request):
+@login_required(login_url='Index')
+def dashboard(request):
     group = None
     if request.user.groups.exists():
         group = request.user.groups.all()[0].name
@@ -39,14 +39,12 @@ def Dashboard(request):
 
 def logoutUser(request):
     logout(request)
-    return redirect(index)
+    return redirect('Index')
 
-def Tasks(request):
+def tasks(request):
     Tasks = Task.objects.filter(~Q(status="Late-Submission") & ~Q(status="On-Time"), employee=Employee.objects.get(account=request.user))
-    base = getUserBaseTemplate(request)
 
     if request.method == "POST":
-        print('gg')
         id = request.POST.get('task_id', False)
         onTime= request.POST.get(f'onTime{id}', False)
         print(id, onTime)
@@ -58,5 +56,5 @@ def Tasks(request):
         task.status = onTime
         task.save()
 
-    context = {'Tasks':Tasks, 'base':base, 'TasksModel':TasksModel(request)}
+    context = {'Tasks':Tasks, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'tasks.html', context)

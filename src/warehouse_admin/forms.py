@@ -1,6 +1,8 @@
 from django import forms
 from django.forms import ModelForm
-from main.models import Batch, ItemCard, ItemType, Distributor, RetailCard, RetailItem
+from distributor.models import Distributor
+from .models import Batch, ItemCard, ItemType, RetailItem
+
 
 class DateInput(forms.DateInput):
     input_type = 'date'

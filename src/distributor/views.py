@@ -1,14 +1,13 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.core.files.storage import FileSystemStorage
-from main.models import ItemCard, Distributor, GoodsMovement, ItemType, Batch, Stock, Person
+#from django.core.files.storage import FileSystemStorage
+from main.models import Person
 from warehouse_admin.forms import SendGoodsForm
+from warehouse_admin.models import Batch, Stock, ItemType, ItemCard, GoodsMovement
 from .forms import SendPaymentForm
-from .models import SalesHistory
+from .models import Distributor, SalesHistory
 
 
-
-# Create your views here.
 def Dashboard(request):
     dis = Distributor.objects.get(account=request.user)
     sales = SalesHistory.objects.filter(distributor=dis)

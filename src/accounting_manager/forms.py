@@ -1,6 +1,6 @@
 from django import forms
 from django.forms import ModelForm
-from .models import Expenses, PricingRequest, Sales
+from .models import Expenses, Sales
 
 class DateInput(forms.DateInput):
     input_type = 'date'
@@ -21,16 +21,6 @@ class AddExpensesForm(ModelForm):
             'price': forms.NumberInput(attrs={'required': True, 'class': 'form-control', 'placeholder': 'Price'}), 
             'date': DateInput(attrs={'required': False, 'class': 'form-control', 'data-provide':'datepicker'}),
             'note': forms.Textarea(attrs={'required': False, 'class': 'form-control', 'placeholder': 'Description'}),
-        }
-
-class SetPriceForm(ModelForm):
-    class Meta:
-        model = PricingRequest
-        fields = [
-            'price'
-        ]
-        widgets = {
-            'price': forms.NumberInput(attrs={'required': True, 'class': 'form-control', 'placeholder': 'Price'})
         }
 
 class AddSalesForm(ModelForm):

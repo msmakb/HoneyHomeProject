@@ -10,6 +10,7 @@
 		border-radius: 50%;
 		display: inline-block;
 	}
+
 	.dot_red {
 		height: 10px;
 		width: 10px;
@@ -17,9 +18,26 @@
 		border-radius: 50%;
 		display: inline-block;
 	}
+
+	.img-container {
+		justify-content: center;
+		display: flex;
+		flex-direction: row;
+		overflow: hidden;
+		width: auto;
+		height: 250px;
+	}
+
+	.img-container .img-to-fit {
+		flex: 1;
+		height: 100%;
+	}
 </style>
+
 <div class="form-group" style="padding: 20px; width: 90%; margin: auto;">
-    <div class="form-control"><h4 style="text-align: center;">Distributor Record</h4></div>
+	<div class="form-control">
+		<h4 style="text-align: center;">Distributor Record</h4>
+	</div>
 </div>
 <div class="row">
 	<div class="col-md">
@@ -27,8 +45,10 @@
 			<div class="card card-body">
 				<h5>Distributor:</h5>
 				<hr>
-				<a class="btn btn-outline-info  btn-sm btn-block" href="{% url 'UpdateDistributorPage' Distributor.id %}">Update Distributor</a>
-				<a class="btn btn-outline-danger  btn-sm btn-block" href="{% url 'DeleteDistributorPage' Distributor.id %}">Delete Distributor</a>
+				<a class="btn btn-outline-info  btn-sm btn-block"
+					href="{% url 'UpdateDistributorPage' Distributor.id %}">Update Distributor</a>
+				<a class="btn btn-outline-danger  btn-sm btn-block"
+					href="{% url 'DeleteDistributorPage' Distributor.id %}">Delete Distributor</a>
 			</div>
 		</div>
 		<div class="col-md">
@@ -38,7 +58,7 @@
 				<p>Address: {{Distributor.person.address}}</p>
 			</div>
 		</div>
-		
+
 	</div>
 
 	<div class="col-md">
@@ -61,25 +81,40 @@
 	</div>
 
 	<div class="card" style="width: 18rem;">
-		{% if Distributor.person.gender != 'Female' %}
-		<label for="file-input"><img class="card-img-top" src="/media/images/default_profile_image_male.png" alt="Card image cap"></label>
-		{% else %}
-		<label for="file-input"><img class="card-img-top" src="/media/images/default_profile_image_female.png" alt="Card image cap"></label>
-		{% endif %}
-		<input type="file" id="file-input" style="display: none;">
+		<form method="POST" enctype="multipart/form-data">
+			{% csrf_token %}
+			{% if not Distributor.person.photo and Distributor.person.gender == 'Male' %}
+			<label class="img-container" for="img-input"><img class="img-to-fit"
+					src="/media/images/default_profile_image_male.png" alt="Card image cap"></label>
+			{% elif Distributor.person.photo and Distributor.person.gender == 'Male' %}
+			<label class="img-container" for="img-input"><img class="img-to-fit"
+					src="{{ Distributor.person.photo.url }}" alt="Card image cap"></label>
+			{% elif not Distributor.person.photo and Distributor.person.gender == "Female" %}
+			<label class="img-container" for="img-input"><img class="img-to-fit"
+					src="/media/images/default_profile_image_female.png" alt="Card image cap"></label>
+			{% elif Distributor.person.photo and Distributor.person.gender == "Female" %}
+			<label class="img-container" for="img-input"><img class="img-to-fit"
+					src="{{ Distributor.person.photo.url }}" alt="Card image cap"></label>
+			{% endif %}
+			<center><button class="btn-sm btn-info" id="submit-photo" type="submit"
+					style="display: none; margin-top: 10px; margin-bottom: -30px;">Edit</button></center>
+			<input type="file" id="img-input" name="image_file" accept="image/*" style="display: none;"
+				onchange="document.getElementById('submit-photo').style.display = 'flex';">
+		</form>
 		<div class="card-body">
-            <p class="card-text" style="text-align: center;">
+			<p class="card-text" style="text-align: center;">
 				{% if Distributor.account.is_active %}
 				<span class="dot_green"></span>
 				{% else %}
 				<span class="dot_red"></span>
 				{% endif %}
-				{{Distributor.person.name}}
-			</p>
-            <p class="card-text" style="text-align: center;">Distributor</p>
+				{{Distributor.person}}
 
-        </div>
-    </div>
+			</p>
+			<p class="card-text" style="text-align: center;">Distributor</p>
+
+		</div>
+	</div>
 </div>
 
 <div class="row">

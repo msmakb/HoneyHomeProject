@@ -1,7 +1,18 @@
+from django.contrib.auth.models import User
 from django.db import models
-from main.models import ItemType, Batch, Price, Distributor
+from main.models import Person
+from warehouse_admin.models import ItemType, Batch, Stock
 
-# Create your models here.
+
+class Distributor(models.Model):
+    id = models.AutoField(primary_key=True)
+    person = models.ForeignKey(Person, on_delete=models.SET_NULL, null=True, blank=True)
+    account = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    stock = models.OneToOneField(Stock, on_delete=models.SET_NULL, null=True, blank=True)
+
+    def __str__(self) -> str:
+        return self.person.name
+
 class SalesHistory(models.Model):
     id = models.AutoField(primary_key=True)
     distributor = models.ForeignKey(Distributor, on_delete=models.CASCADE)

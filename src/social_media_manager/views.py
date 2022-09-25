@@ -4,7 +4,7 @@ from main.utils import getUserBaseTemplate as base
 from .forms import AddCustomerForm, AddPersonForm, CreateQuestionnaireForm, PublishQuestionnaireForm
 from .models import Customer, Person, Questionnaire
 
-# Create your views here.
+
 def Dashboard(request):
 
     context = {'TasksModel':TasksModel(request)}

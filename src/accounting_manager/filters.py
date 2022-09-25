@@ -1,5 +1,6 @@
 import django_filters
 from django import forms
+from django.db.utils import OperationalError
 from .models import Sales
 
 class DateInput(forms.DateInput):
@@ -17,19 +18,19 @@ class DateRangeWidget(django_filters.widgets.DateRangeWidget):
         if to_attrs:
             self.widgets[1].attrs.update(to_attrs)
 
-
 def getChoises():
     items, batches, sellers = [], [], []
     sales = Sales.objects.filter(is_approved=True)
-    for i in sales:
-        if (f'{i.type}', f'{i.type}') not in items: 
-            items.append((i.type.id, f'{i.type}'))
-        if (f'{i.batch}', f'{i.batch}') not in batches: 
-            batches.append((i.batch.id, f'{i.batch}'))
-        if (f'{i.seller}', f'{i.seller}') not in sellers: 
-            sellers.append((f'{i.seller}', f'{i.seller}'))
+    try:
+        for i in sales:
+            if (f'{i.type}', f'{i.type}') not in items: 
+                items.append((i.type.id, f'{i.type}'))
+            if (f'{i.batch}', f'{i.batch}') not in batches: 
+                batches.append((i.batch.id, f'{i.batch}'))
+            if (f'{i.seller}', f'{i.seller}') not in sellers: 
+                sellers.append((f'{i.seller}', f'{i.seller}'))
+    except OperationalError: pass
     return {'items': items, 'batches': batches, 'sellers': sellers}
-
 
 class SalesFilter(django_filters.FilterSet):
     type = django_filters.ChoiceFilter(
@@ -55,4 +56,3 @@ class SalesFilter(django_filters.FilterSet):
             'seller',
             'date',
         ]
-

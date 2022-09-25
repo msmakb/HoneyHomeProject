@@ -1,7 +1,8 @@
 from django.db import models
-from main.models import Person, ItemType
+from main.models import Person
+from warehouse_admin.models import ItemType
 
-# Create your models here.
+
 class Customer(models.Model):
     id = models.AutoField(primary_key=True)    
     person = models.ForeignKey(Person, on_delete=models.CASCADE)

@@ -1,6 +1,7 @@
 from django import forms
 from django.forms import ModelForm
-from main.models import ItemCard
+from warehouse_admin.models import ItemCard
+
 
 class SendPaymentForm(ModelForm):
     def __init__(self, pk=1, *args, **kwargs):

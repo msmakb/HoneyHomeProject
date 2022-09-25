@@ -1,8 +1,7 @@
-from statistics import mode
 from django.db import models
-from main.models import Distributor, ItemType, Batch
+from warehouse_admin.models import ItemType, Batch
 
-# Create your models here.
+
 class Expenses(models.Model):
     id = models.AutoField(primary_key=True)
     item = models.CharField(max_length=30)
@@ -16,10 +15,6 @@ class Expenses(models.Model):
 
     def total(self):
         return self.quantity * self.price
-
-class PricingRequest(models.Model):
-    id = models.AutoField(primary_key=True)
-    price = models.IntegerField(null=True, blank=True)
 
 class Sales(models.Model):
     id = models.AutoField(primary_key=True)
@@ -36,4 +31,3 @@ class Sales(models.Model):
 
     def getTotal(self):
         return self.quantity * self.price
-

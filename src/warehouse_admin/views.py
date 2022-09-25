@@ -1,13 +1,11 @@
-from ast import Return
-from tokenize import Name
 from django.shortcuts import redirect, render
 from django.contrib import messages
-from django.core.exceptions import MultipleObjectsReturned
+from distributor.models import Distributor
 from main.decorators import allowed_users
 from main.tasks import TasksModel
 from main.utils import getUserBaseTemplate as base
-from main.models import (ItemCard, RetailCard, Stock, ItemType, Batch,
-                         Distributor, GoodsMovement, RetailItem)
+from .models import (ItemCard, RetailCard, Stock, ItemType, Batch,
+                         GoodsMovement, RetailItem)
 from .forms import (AddGoodsForm, RegisterItemForm, AddBatchForm, 
                     SendGoodsForm, AddRetailGoodsForm, ConvertToRetailForm)
 

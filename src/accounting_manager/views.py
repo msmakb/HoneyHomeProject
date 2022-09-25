@@ -2,16 +2,13 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.db.models import Q
 from main.tasks import TasksModel
-from .models import Expenses, PricingRequest, Sales
-from .forms import AddExpensesForm, SetPriceForm, AddSalesForm
-from .filters import SalesFilter
-from main.models import ItemCard, Price, RetailItem
 from main.utils import getUserBaseTemplate as base
+from warehouse_admin.models import ItemCard, RetailItem
+from .filters import SalesFilter
+from .forms import AddExpensesForm, AddSalesForm
+from .models import Expenses, Sales
 
 
-
-
-# Create your views here.
 def Dashboard(request):
     sales = Sales.objects.filter(is_approved=True).order_by('-id')[:5]
 
@@ -55,7 +52,7 @@ def PricingPage(request):
         id = request.POST.get('id', False)
         val = request.POST.get(f'val{str(id)}', False)
         item = ItemCard.objects.get(id=int(id))
-        price = Price.objects.create(price=int(val))
+        price = int(val)
         item.price = price
         item.is_priced = True
         item.save()

@@ -1,7 +1,7 @@
 
 {% for g in request.user.groups.all %}
     {% if g.name != "Distributor" %}
-        {% for -, Task in TasksModel.main.Tasks.items %}
+        {% for -, Task in getEmployeesTasks.Tasks.items %}
         <div class="card w-100" style="margin-bottom: 5px;">
             <div class="card-body">
                 <h5 class="card-title">{{Task.name}}</h5>

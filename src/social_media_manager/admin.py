@@ -1,6 +1,7 @@
 from django.contrib import admin
 from .models import Customer, CustomerPurchase, Questionnaire
 
+
 class CustomerAdmin(admin.ModelAdmin):
     list_display = ('id', 'person', 'instagram', 'shopee', 'facebook')
 

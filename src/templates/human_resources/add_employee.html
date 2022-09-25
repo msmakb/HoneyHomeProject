@@ -6,6 +6,7 @@
 </div>
 <form method="POST">
     {% csrf_token %}
+    {% if position_form.position.field.choices %}
     <div class="row">
         <div class="form-group" style="width: 45%; margin-left: 50px;">
             <label for="exampleInputPassword1">Full Name</label>
@@ -52,7 +53,11 @@
         <button type="submit" class="btn btn-xs btn-info">Add Employee</button>
     </div>
     </center>
-
+    {% else %}
+    <div class="alert alert-warning" role="alert" style="width: 100%; height: 50px;">
+        <p style="text-align: center;">No Employee Positions are available. If you want to chang employee position you must delete existing employee to have an empty position</p>
+    </div> 
+    {% endif %}
 </form>
 
 {% endblock %}

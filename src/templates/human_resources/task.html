@@ -59,10 +59,14 @@
                 </tr>
                 <tr>
                     <td>Task Rate</td>
+                    {% if Task.status == "In-Progress" %}
+                    <td>In-Progress</td>
+                    {% else %}
                     {% if TaskRate.rate != None %}
                     <td>{{TaskRate.rate}}\5</td>
                     {% else %}
                     <td><a class="btn btn-outline-info  btn-sm btn-block" href="{% url 'TaskEvaluationPage' %}">Rate</a></td>
+                    {% endif %}
                     {% endif %}
                 </tr>
             </tbody>

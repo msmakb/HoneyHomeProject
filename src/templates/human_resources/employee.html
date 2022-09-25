@@ -17,6 +17,18 @@
 		border-radius: 50%;
 		display: inline-block;
 	}
+	.img-container {
+				justify-content: center;
+				display: flex;
+				flex-direction: row;
+				overflow: hidden;
+				width: auto;
+				height: 250px;
+			}
+	.img-container .img-to-fit {
+		flex: 1;
+		height: 100%;
+	}
 </style>
 
 <div class="form-group" style="padding: 20px; width: 90%; margin: auto;">
@@ -62,12 +74,20 @@
 	</div>
 
 	<div class="card" style="width: 18rem;">
-		{% if Employee.person.gender != 'Female' %}
-		<label for="file-input"><img class="card-img-top" src="/media/images/default_profile_image_male.png" alt="Card image cap"></label>
-		{% else %}
-		<label for="file-input"><img class="card-img-top" src="/media/images/default_profile_image_female.png" alt="Card image cap"></label>
-		{% endif %}
-		<input type="file" id="file-input" style="display: none;">
+		<form method="POST" enctype="multipart/form-data">
+			{% csrf_token %}
+			{% if not Employee.person.photo and Employee.person.gender == 'Male' %}
+			<label class="img-container" for="img-input"><img class="img-to-fit" src="/media/images/default_profile_image_male.png" alt="Card image cap"></label>
+			{% elif Employee.person.photo and Employee.person.gender == 'Male' %}
+			<label class="img-container" for="img-input"><img class="img-to-fit" src="{{ Employee.person.photo.url }}" alt="Card image cap"></label>
+			{% elif not Employee.person.photo and Employee.person.gender == "Female" %}
+			<label class="img-container" for="img-input"><img class="img-to-fit" src="/media/images/default_profile_image_female.png" alt="Card image cap"></label>
+			{% elif Employee.person.photo and Employee.person.gender == "Female" %}
+			<label class="img-container" for="img-input"><img class="img-to-fit" src="{{ Employee.person.photo.url }}" alt="Card image cap"></label>
+			{% endif %}
+			<center><button class="btn-sm btn-info" id="submit-photo" type="submit" style="display: none; margin-top: 10px; margin-bottom: -30px;">Edit</button></center>
+			<input type="file" id="img-input" name="image_file" accept="image/*" style="display: none;" onchange="document.getElementById('submit-photo').style.display = 'flex';">
+		</form>
 		<div class="card-body">
             <p class="card-text" style="text-align: center;">
 				{% if Employee.account.is_active %}
