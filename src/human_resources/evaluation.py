@@ -59,6 +59,7 @@ def monthlyTaskRate(emp_id:int) -> float:
     if not newEmployee(emp_id):
         from django.utils import timezone
         from datetime import timedelta
+        
         rate, count = 0, 0
         today = timezone.now()
         end_date = today - timedelta(days=30)

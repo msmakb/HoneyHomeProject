@@ -1,6 +1,7 @@
 {% extends base %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
+{% include 'alerts.html' %}
 
 <style>
 	.dot_green {
@@ -55,7 +56,7 @@
 			<div class="card card-body" style="margin-top: 20px;">
 				<h5>Address Information</h5>
 				<hr>
-				<p>Address: {{Distributor.person.address}}</p>
+				<p>Address: {{Distributor.person.address }}</p>
 			</div>
 		</div>
 
@@ -66,16 +67,16 @@
 			<div class="card card-body">
 				<h5>Contact Information</h5>
 				<hr>
-				<p>Email: {{Distributor.person.contacting_email}}</p>
-				<p>Phone: {{Distributor.person.phone_number}}</p>
+				<p>Email: {{ Distributor.person.contacting_email }}</p>
+				<p>Phone: {{ Distributor.person.phone_number }}</p>
 			</div>
 		</div>
 		<div class="col-md">
 			<div class="card card-body" style="margin-top: 10px;">
 				<h5>System Account Information</h5>
 				<hr>
-				<p>Username: {{Distributor.account}}</p>
-				<p>Email: {{Distributor.account.email}}</p>
+				<p>Username: {{ Distributor.account }}</p>
+				<p>Email: {{ Distributor.account.email }}</p>
 			</div>
 		</div>
 	</div>
@@ -108,7 +109,7 @@
 				{% else %}
 				<span class="dot_red"></span>
 				{% endif %}
-				{{Distributor.person}}
+				{{ Distributor.person }}
 
 			</p>
 			<p class="card-text" style="text-align: center;">Distributor</p>
@@ -123,10 +124,10 @@
 			<div class="card-body">
 				<p>Other Info</p>
 				<hr>
-				<p>Date of Birth: {{Distributor.person.date_of_birth}}</p>
-				<p>Gender: {{Distributor.person.gender}}</p>
-				<p>Register Date: {{Distributor.account.date_joined}}</p>
-				<p>Last Login: {{Distributor.account.last_login}}</p>
+				<p>Date of Birth: {{ Distributor.person.date_of_birth }}</p>
+				<p>Gender: {{ Distributor.person.gender }}</p>
+				<p>Register Date: {{ Distributor.account.date_joined }}</p>
+				<p>Last Login: {{ Distributor.account.last_login }}</p>
 			</div>
 		</div>
 	</div>

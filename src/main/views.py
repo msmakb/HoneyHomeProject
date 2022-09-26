@@ -3,6 +3,8 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
+from datetime import timedelta
+
 from human_resources.models import Employee, Task
 from .decorators import isAuthenticatedUser
 from .tasks import getEmployeesTasks
@@ -24,11 +26,14 @@ def index(request):
 
     return render(request, 'index.html')
 
+
 def about(request):
     return render(request, 'about.html')
 
+
 def unauthorized(request):
     return render(request, 'unauthorized.html')
+
 
 @login_required(login_url='Index')
 def dashboard(request):
@@ -37,24 +42,46 @@ def dashboard(request):
         group = request.user.groups.all()[0].name
     return render(request, 'Dashboard.html', {'group': group})
 
+
 def logoutUser(request):
     logout(request)
     return redirect('Index')
 
+
 def tasks(request):
-    Tasks = Task.objects.filter(~Q(status="Late-Submission") & ~Q(status="On-Time"), employee=Employee.objects.get(account=request.user))
+    Tasks = Task.objects.filter(~Q(status="Late-Submission") & ~Q(
+        status="On-Time"), employee__account=request.user)
 
     if request.method == "POST":
-        id = request.POST.get('task_id', False)
-        onTime= request.POST.get(f'onTime{id}', False)
-        print(id, onTime)
-        if onTime == "True":
-            onTime = "On-Time"
-        else:
-            onTime = "Late-Submission"
-        task = Task.objects.get(id=int(id))
-        task.status = onTime
-        task.save()
+        from django.utils import timezone
+        from datetime import datetime
 
-    context = {'Tasks':Tasks, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
+        task_id = request.POST.get('task_id', False)
+        task = Task.objects.get(id=int(task_id))
+        onTime = request.POST.get(f'onTime{id}', False)
+        now = datetime.strftime(timezone.now(), '%Y-%m-%d %H:%M:%s')
+
+        if task.name == "Evaluate employees":
+            return redirect("WeeklyEvaluationPage")
+        elif task.name == "Rate task":
+            return redirect("TaskEvaluationPage")
+        elif not task.deadline_date or str(task.deadline_date) >= now:
+            task.status = "On-Time"
+        else:
+            task.status = "Late-Submission"
+
+        task.submission_date = timezone.now()
+        task.save()
+        
+        if request.user.groups.all()[0].name != "Human Resources":
+            emp = Employee.objects.get(position='Human Resources')
+            Task.objects.create(
+                employee=emp,
+                name="Rate task",
+                description=f"Don't forget to rate {emp.person.name}'s submitted task. '{task.name}' Task.",
+                deadline_date=timezone.now() + timedelta(days=3)
+            )
+
+    context = {'Tasks': Tasks, 'base': base(
+        request), 'getEmployeesTasks': getEmployeesTasks(request)}
     return render(request, 'tasks.html', context)

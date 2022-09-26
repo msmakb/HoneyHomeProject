@@ -116,5 +116,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Corn jobs
 CRONJOBS = [
-    ('* * * * 0', 'human_resources.cron.addWeekToRate')
+    ('*/1 * * * *', 'human_resources.cron.checkTaskDateTime'),
+    ('1 0 * * 0', 'human_resources.cron.addWeekToRate'),
 ]

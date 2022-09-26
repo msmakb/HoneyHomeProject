@@ -1,8 +1,7 @@
-from re import T
-from django.contrib import messages
 from django.contrib.auth.models import Group
 from django.db.models import Q
 from django.shortcuts import redirect, render
+from django.utils import timezone
 
 from distributor.models import Distributor
 from main.decorators import allowed_users
@@ -10,6 +9,7 @@ from main.models import Person
 from main.tasks import getEmployeesTasks
 from main.utils import getUserBaseTemplate as base
 
+from . import alerts
 from .evaluation import getEvaluation
 from .forms import AddPersonForm, EmployeePositionForm, AddTaskForm
 from .models import Employee, Task, TaskRate, Week, WeeklyRate
@@ -51,6 +51,7 @@ def AddEmployeePage(request):
             position = position_form['position'].value()
             # Create new employee and a signal will be sent to run onAddingNewEmployee function in signals.py file
             Employee.objects.create(position=position)
+            alerts.employee_added(request)
 
             return redirect('EmployeesPage')
 
@@ -72,6 +73,7 @@ def EmployeePage(request, pk):
         q = employee.person
         q.photo = img
         q.save()
+        alerts.employee_photo_updated(request)
 
     context = {'Employee': employee, 'Evaluation': evaluation,
                'base': base(request), 'getEmployeesTasks': getEmployeesTasks(request)}
@@ -97,6 +99,7 @@ def UpdateEmployeePage(request, pk):
             employee.account.groups.clear()  # delete the employee group
             # assigning the employee with the new position
             Group.objects.get(name=position).user_set.add(employee.account)
+            alerts.employee_data_updated(request)
 
             return redirect('EmployeePage', pk)
 
@@ -113,6 +116,7 @@ def DeleteEmployeePage(request, pk):
     if request.method == "POST":
         # Delete the employee
         employee.delete()
+        alerts.employee_removed(request)
 
         return redirect('EmployeesPage')
 
@@ -145,6 +149,7 @@ def AddDistributorPage(request):
             person_form.save()
             # Create new distributor and a signal will be sent to run onAddingNewDistributor function in signals.py file
             Distributor.objects.create()
+            alerts.distributor_added(request)
 
             return redirect('DistributorsPage')
 
@@ -165,6 +170,7 @@ def DistributorPage(request, pk):
         q = distributor.person
         q.photo = img
         q.save()
+        alerts.distributor_photo_updated(request)
 
     context = {'Distributor': distributor, 'base': base(request),
                'getEmployeesTasks': getEmployeesTasks(request)}
@@ -184,6 +190,7 @@ def UpdateDistributorPage(request, pk):
         if person_form.is_valid():
             # Update data
             person_form.save()
+            alerts.distributor_data_updated(request)
 
             return redirect('DistributorPage', pk)
 
@@ -200,6 +207,7 @@ def DeleteDistributorPage(request, pk):
     if request.method == "POST":
         # Delete the distributor
         distributor.delete()
+        alerts.distributor_removed(request)
 
         return redirect('DistributorsPage')
 
@@ -230,6 +238,7 @@ def AddTaskPage(request):
         if form.is_valid():
             # Add new task
             form.save()
+            alerts.Task_added(request)
 
             return redirect('TasksPage')
 
@@ -266,6 +275,7 @@ def UpdateTaskPage(request, pk):
         if form.is_valid():
             # Update
             form.save()
+            alerts.Task_data_updated(request)
 
             return redirect('TaskPage', pk)
 
@@ -282,6 +292,7 @@ def DeleteTaskPage(request, pk):
     if request.method == "POST":
         # Delete the task. note: deleteTaskRate function in signals.py will be executed
         task.delete()
+        alerts.Task_removed(request)
 
         return redirect('TasksPage')
 
@@ -310,7 +321,7 @@ def WeeklyEvaluationPage(request):
         request), 'getEmployeesTasks': getEmployeesTasks(request)}
     # if there is no unrated weeks, just send a success message
     if not weeks.exists():
-        messages.success(request, "Weekly evaluation has been don")
+        alerts.evaluation_done(request)
         context['week_to_rate_exists'] = False
     else:
         # Fetch the employees' data from database excluding the HR and CEO
@@ -323,12 +334,9 @@ def WeeklyEvaluationPage(request):
             for index, week in enumerate(weeks):
                 # if it is the last week, send the following messages only
                 if index == len(weeks) - 1:
-                    messages.warning(
-                        request, "There are more than one week you have been not rated.")
-                    messages.warning(
-                        request, f"{unrated_weeks_to_delete} unrated week/s have been deleted from database, only last unrated week left.")
-                    messages.info(
-                        request, "message have been sent to the CEO regarding this.")
+                    alerts.many_weeks(request)
+                    alerts.deleted_weeks(request, unrated_weeks_to_delete)
+                    alerts.inform_ceo(request)
                 # else delete the week
                 else:
                     week.delete()
@@ -342,9 +350,18 @@ def WeeklyEvaluationPage(request):
                     week=weeks[0],
                     employee=emp,
                     rate=int(val))
-            # change the week state to be already rated
+            # change the week state
             weeks[0].is_rated = True
             weeks[0].save()
+
+            # change the last weekly evaluations task state
+            task = Task.objects.get(name="Evaluate employees", is_rated=False)
+            task.status = "On-Time"
+            task.submission_date = timezone.now()
+            task.is_rated = True
+            task.save()
+            # Rate the task automatically
+            TaskRate.objects.create(task=task, on_time_rate=5, rate=5)
 
             return redirect('EvaluationPage')
 
@@ -353,24 +370,55 @@ def WeeklyEvaluationPage(request):
 
 
 def TaskEvaluationPage(request):
-    Tasks = Task.objects.filter(
-        ~Q(status="In-Progress") & ~Q(status="Deadlined"), is_rated=False)
+    # Fetch the submitted tasks data from database
+    if request.user.groups.all()[0].name == "Human Resources":
+        Tasks = Task.objects.filter(
+            ~Q(status="In-Progress") & ~Q(status="Overdue"),
+            ~Q(employee__position="Human Resources"), is_rated=False)
+    else:
+        Tasks = Task.objects.filter(
+            ~Q(status="In-Progress") & ~Q(status="Overdue"), is_rated=False)
+    # Check if it is a post method
     if request.method == "POST":
+        # Get the posted (rated) task id
         id = request.POST.get('id', False)
+        # Get the value of the posted task rate
         val = request.POST.get(f'val{str(id)}', False)
-        on_time = 5
+        # Fetch the task from database and calculate 'on time rate'
         task = Task.objects.get(id=int(id))
+        on_time = 5
         if task.status != "On-Time":
             on_time = 2.5
-        TaskRate.objects.create(task=task, on_time_rate=on_time, rate=int(val))
+        # Rate the task
+        TaskRate.objects.create(
+            task=task, on_time_rate=on_time, rate=float(val))
         task.is_rated = True
         task.save()
-
-        messages.success(request, f"Task has been rated successfully")
+        # Get the auto task for the HR and process it
+        auto_task = Task.objects.get(
+            employee__position="Human Resources",
+            description=f"Don't forget to rate {task.employee.person.name}'s submitted task. '{task.name}' Task.",
+            is_rated=False)
+        on_time = 5
+        status = 'On-Time'
+        if auto_task.status != 'In-Progress':
+            on_time = 2.5
+            status = 'Late-Submission'
+        TaskRate.objects.create(
+            task=auto_task, on_time_rate=on_time, rate=float(5))
+        auto_task.status = status
+        auto_task.is_rated = True
+        auto_task.submission_date = timezone.now()
+        auto_task.save()
+        print(auto_task.description)
+        print(TaskRate.objects.all().order_by('-id')[0])
+        # Success message
+        alerts.tasks_evaluation_done(request)
+    # If there is no tasks to rate just send a message
     if not Tasks.exists():
-        messages.info(request, "There is no more tasks to rate")
+        alerts.no_tasks_to_rate(request)
 
-    context = {'Tasks': Tasks,  'base': base(
-        request), 'getEmployeesTasks': getEmployeesTasks(request)}
+    context = {'Tasks': Tasks,  'base': base(request),
+               'getEmployeesTasks': getEmployeesTasks(request)}
     template = 'human_resources/task_evaluation.html'
     return render(request, template, context)

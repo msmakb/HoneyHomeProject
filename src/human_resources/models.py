@@ -32,14 +32,14 @@ class Task(models.Model):
         ('In-Progress', 'In-Progress'),
         ('On-Time', 'On-Time'),
         ('Late-Submission', 'Late-Submission'),
-        ('Deadlined', 'Deadlined')
+        ('Overdue', 'Overdue')
     ]
 
     id = models.AutoField(primary_key=True)
     employee = models.ForeignKey(
         Employee, on_delete=models.SET_NULL, null=True, blank=True)
     name = models.CharField(max_length=20)
-    description = models.TextField(max_length=500, null=True, blank=True)
+    description = models.TextField(max_length=500, default="-", null=True, blank=True)
     status = models.CharField(
         max_length=20, choices=STATUS, null=True, blank=True, default='In-Progress')
     receiving_date = models.DateTimeField(auto_now_add=True)
@@ -49,6 +49,20 @@ class Task(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+    def getTimeLeft(self) -> str:
+        from datetime import datetime
+        from django.utils import timezone
+
+        if self.deadline_date:
+            date, time = str(self.deadline_date.date()).split('-'), str(self.deadline_date.time()).split(':')
+            date = datetime(int(date[0]), int(date[1]), int(date[2]), int(time[0]), int(time[1]), int(time[2][:2]), 00000)
+            diff = date - timezone.now()
+            if str(diff)[0] == '-':
+                return 'Overdue'
+            else:
+                return str(diff)[:-7]
+        else: return "Open"
 
 
 class TaskRate(models.Model):

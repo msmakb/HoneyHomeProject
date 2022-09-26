@@ -1,6 +1,7 @@
 {% extends base %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
+{% include 'alerts.html' %}
 
 <div style="float: right;">
     <td><a id="button" class="btn btn-xs btn-info" href="{% url 'AddTaskPage' %}">Add Task</a></td>
@@ -21,12 +22,12 @@
     <tbody>
     {% for task in Tasks %}
     <tr>
-        <td>{{task.name}}</td>
-        <td>{{task.employee.person.name}}</td>
-        <td>{{task.employee.position}}</td>
-        <td>{{task.status}}</td>
-        <td>{{task.receiving_date}}</td>
-        <td>{% if task.submission_date == None %}{{task.status}}{% else %}{{task.submission_date}}{% endif %}</td>
+        <td>{{ task.name }}</td>
+        <td>{{ task.employee.person.name }}</td>
+        <td>{{ task.employee.position }}</td>
+        <td>{{ task.status }}</td>
+        <td>{{ task.receiving_date }}</td>
+        <td>{% if task.submission_date == None %} - {% else %}{{ task.submission_date }}{% endif %}</td>
         <td><a class="btn btn-sm btn-info" href="{% url 'TaskPage' task.id %}">View</a></td>
     </tr>
     {% endfor %}

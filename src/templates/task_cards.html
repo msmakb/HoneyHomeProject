@@ -1,16 +1,16 @@
 
 {% for g in request.user.groups.all %}
     {% if g.name != "Distributor" %}
-        {% for -, Task in getEmployeesTasks.Tasks.items %}
+        {% for -, task in getEmployeesTasks.Tasks.items %}
         <div class="card w-100" style="margin-bottom: 5px;">
             <div class="card-body">
-                <h5 class="card-title">{{Task.name}}</h5>
-                <p class="card-text">{{Task.description}}</p>
+                <h5 class="card-title">{{task.name}}</h5>
+                <p class="card-text">{{task.description}}</p>
                 <a href="{% url 'Tasks' %}" class="btn btn-info">View Task</a>
-                {% if Task.time_left != 'Declined' %}
-                <span style="color: green;">{{Task.time_left}}</span>
+                {% if task.time_left != 'Overdue'%}
+                <span style="color: green;">{{task.time_left}}</span>
                 {% else %}
-                <span style="color: red;">{{Task.time_left}}</span>
+                <span style="color: red;">{{task.time_left}}</span>
                 {% endif %}
             </div>
         </div>

@@ -1,6 +1,7 @@
 {% extends base %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
+{% include 'alerts.html' %}
 
 <style>
 	.dot_green {
@@ -10,6 +11,7 @@
 		border-radius: 50%;
 		display: inline-block;
 	}
+
 	.dot_red {
 		height: 10px;
 		width: 10px;
@@ -17,14 +19,16 @@
 		border-radius: 50%;
 		display: inline-block;
 	}
+
 	.img-container {
-				justify-content: center;
-				display: flex;
-				flex-direction: row;
-				overflow: hidden;
-				width: auto;
-				height: 250px;
-			}
+		justify-content: center;
+		display: flex;
+		flex-direction: row;
+		overflow: hidden;
+		width: auto;
+		height: 250px;
+	}
+
 	.img-container .img-to-fit {
 		flex: 1;
 		height: 100%;
@@ -32,7 +36,9 @@
 </style>
 
 <div class="form-group" style="padding: 20px; width: 90%; margin: auto;">
-    <div class="form-control"><h4 style="text-align: center;">Employee Record</h4></div>
+	<div class="form-control">
+		<h4 style="text-align: center;">Employee Record</h4>
+	</div>
 </div>
 <div class="row">
 	<div class="col-md">
@@ -40,18 +46,20 @@
 			<div class="card card-body">
 				<h5>Employee:</h5>
 				<hr>
-				<a class="btn btn-outline-info  btn-sm btn-block" href="{% url 'UpdateEmployeePage' Employee.id %}">Update Employee</a>
-				<a class="btn btn-outline-danger  btn-sm btn-block" href="{% url 'DeleteEmployeePage' Employee.id %}">Delete Employee</a>
+				<a class="btn btn-outline-info  btn-sm btn-block"
+					href="{% url 'UpdateEmployeePage' Employee.id %}">Update Employee</a>
+				<a class="btn btn-outline-danger  btn-sm btn-block"
+					href="{% url 'DeleteEmployeePage' Employee.id %}">Delete Employee</a>
 			</div>
 		</div>
 		<div class="col-md">
 			<div class="card card-body" style="margin-top: 20px;">
 				<h5>Address Information</h5>
 				<hr>
-				<p>Address: {{Employee.person.address}}</p>
+				<p>Address: {{ Employee.person.address }}</p>
 			</div>
 		</div>
-		
+
 	</div>
 
 	<div class="col-md">
@@ -59,16 +67,16 @@
 			<div class="card card-body">
 				<h5>Contact Information</h5>
 				<hr>
-				<p>Email: {{Employee.person.contacting_email}}</p>
-				<p>Phone: {{Employee.person.phone_number}}</p>
+				<p>Email: {{ Employee.person.contacting_email }}</p>
+				<p>Phone: {{ Employee.person.phone_number }}</p>
 			</div>
 		</div>
 		<div class="col-md">
 			<div class="card card-body" style="margin-top: 10px;">
 				<h5>System Account Information</h5>
 				<hr>
-				<p>Username: {{Employee.account}}</p>
-				<p>Email: {{Employee.account.email}}</p>
+				<p>Username: {{ Employee.account }}</p>
+				<p>Email: {{ Employee.account.email }}</p>
 			</div>
 		</div>
 	</div>
@@ -77,30 +85,36 @@
 		<form method="POST" enctype="multipart/form-data">
 			{% csrf_token %}
 			{% if not Employee.person.photo and Employee.person.gender == 'Male' %}
-			<label class="img-container" for="img-input"><img class="img-to-fit" src="/media/images/default_profile_image_male.png" alt="Card image cap"></label>
+			<label class="img-container" for="img-input"><img class="img-to-fit"
+					src="/media/images/default_profile_image_male.png" alt="Card image cap"></label>
 			{% elif Employee.person.photo and Employee.person.gender == 'Male' %}
-			<label class="img-container" for="img-input"><img class="img-to-fit" src="{{ Employee.person.photo.url }}" alt="Card image cap"></label>
+			<label class="img-container" for="img-input"><img class="img-to-fit" src="{{ Employee.person.photo.url }}"
+					alt="Card image cap"></label>
 			{% elif not Employee.person.photo and Employee.person.gender == "Female" %}
-			<label class="img-container" for="img-input"><img class="img-to-fit" src="/media/images/default_profile_image_female.png" alt="Card image cap"></label>
+			<label class="img-container" for="img-input"><img class="img-to-fit"
+					src="/media/images/default_profile_image_female.png" alt="Card image cap"></label>
 			{% elif Employee.person.photo and Employee.person.gender == "Female" %}
-			<label class="img-container" for="img-input"><img class="img-to-fit" src="{{ Employee.person.photo.url }}" alt="Card image cap"></label>
+			<label class="img-container" for="img-input"><img class="img-to-fit" src="{{ Employee.person.photo.url }}"
+					alt="Card image cap"></label>
 			{% endif %}
-			<center><button class="btn-sm btn-info" id="submit-photo" type="submit" style="display: none; margin-top: 10px; margin-bottom: -30px;">Edit</button></center>
-			<input type="file" id="img-input" name="image_file" accept="image/*" style="display: none;" onchange="document.getElementById('submit-photo').style.display = 'flex';">
+			<center><button class="btn-sm btn-info" id="submit-photo" type="submit"
+					style="display: none; margin-top: 10px; margin-bottom: -30px;">Edit</button></center>
+			<input type="file" id="img-input" name="image_file" accept="image/*" style="display: none;"
+				onchange="document.getElementById('submit-photo').style.display = 'flex';">
 		</form>
 		<div class="card-body">
-            <p class="card-text" style="text-align: center;">
+			<p class="card-text" style="text-align: center;">
 				{% if Employee.account.is_active %}
 				<span class="dot_green"></span>
 				{% else %}
 				<span class="dot_red"></span>
 				{% endif %}
-				{{Employee.person.name}}
+				{{ Employee.person.name }}
 			</p>
-            <p class="card-text" style="text-align: center;">{{Employee.position}}</p>
+			<p class="card-text" style="text-align: center;">{{ Employee.position }}</p>
 
-        </div>
-    </div>
+		</div>
+	</div>
 </div>
 
 <div class="row">
@@ -109,10 +123,10 @@
 			<div class="card-body">
 				<p>Other Info</p>
 				<hr>
-				<p>Date of Birth: {{Employee.person.date_of_birth}}</p>
-				<p>Gender: {{Employee.person.gender}}</p>
-				<p>Register Date: {{Employee.account.date_joined}}</p>
-				<p>Last Login: {{Employee.account.last_login}}</p>
+				<p>Date of Birth: {{ Employee.person.date_of_birth }}</p>
+				<p>Gender: {{ Employee.person.gender }}</p>
+				<p>Register Date: {{ Employee.account.date_joined }}</p>
+				<p>Last Login: {{ Employee.account.last_login }}</p>
 			</div>
 		</div>
 	</div>
@@ -124,43 +138,57 @@
 				<hr>
 				<table>
 					<colgroup>
-						<col width="4%"><col width="4%">
-						<col width="4%"><col width="4%">
-						<col width="4%"><col width="4%">
-						<col width="4%"><col width="4%">
-						<col width="4%"><col width="4%">
-						<col width="4%"><col width="4%">
-						<col width="4%"><col width="4%">
-						<col width="4%"><col width="4%">
-						<col width="4%"><col width="4%">
-						<col width="4%"><col width="4%">
-						<col width="4%"><col width="4%">
-						<col width="4%"><col width="4%">
-						<col width="4%"><col width="4%">
-						<col width="5%"><col width="5%">
+						<col width="4%">
+						<col width="4%">
+						<col width="4%">
+						<col width="4%">
+						<col width="4%">
+						<col width="4%">
+						<col width="4%">
+						<col width="4%">
+						<col width="4%">
+						<col width="4%">
+						<col width="4%">
+						<col width="4%">
+						<col width="4%">
+						<col width="4%">
+						<col width="4%">
+						<col width="4%">
+						<col width="4%">
+						<col width="4%">
+						<col width="4%">
+						<col width="4%">
+						<col width="4%">
+						<col width="4%">
+						<col width="4%">
+						<col width="4%">
+						<col width="4%">
+						<col width="4%">
+						<col width="5%">
+						<col width="5%">
 					</colgroup>
 					<tbody>
 						<tr>
-							<td colspan=13>Employee Overall Evaluation:</td>	
-							<td>{{Evaluation.AllTimeEvaluation}}</td>
-						</tr>	
+							<td colspan=13>Employee Overall Evaluation:</td>
+							<td>{{ Evaluation.AllTimeEvaluation}}</td>
+						</tr>
 						<tr>
 							<td colspan=13>Employee Last Month Overall Evaluation: </td>
-							<td>{{Evaluation.MonthlyOverallEvaluation}}</td>	
-						</tr>	
+							<td>{{ Evaluation.MonthlyOverallEvaluation}}</td>
+						</tr>
 						<tr>
-							<td colspan=13>Employee Last Month Evaluation:</td>	
-							<td>{{Evaluation.MonthlyRate}}</td>
-						</tr>	
+							<td colspan=13>Employee Last Month Evaluation:</td>
+							<td>{{ Evaluation.MonthlyRate}}</td>
+						</tr>
 						<tr>
-							<td colspan=13>Employee last Month Task Evaluation:</td>	
-							<td>{{Evaluation.MonthlyTaskRate}}</td>
-						</tr>	
+							<td colspan=13>Employee last Month Task Evaluation:</td>
+							<td>{{ Evaluation.MonthlyTaskRate}}</td>
+						</tr>
 						<tr>
-							<td colspan=13>Employee Last Week Evaluation:</td>	
-							<td>{{Evaluation.WeeklyRate}}</td>
-						</tr>	
-					</tbody>	
+							<td colspan=13>Employee Last Week Evaluation:</td>
+							<td>{{ Evaluation.WeeklyRate }}</td>
+						</tr>
+					</tbody>
 				</table>
 			</div>
 		</div>

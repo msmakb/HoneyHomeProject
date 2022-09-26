@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from main.tasks import TasksModel
+from main.tasks import getEmployeesTasks
 from main.utils import getUserBaseTemplate as base
 from .forms import AddCustomerForm, AddPersonForm, CreateQuestionnaireForm, PublishQuestionnaireForm
 from .models import Customer, Person, Questionnaire
@@ -7,12 +7,12 @@ from .models import Customer, Person, Questionnaire
 
 def Dashboard(request):
 
-    context = {'TasksModel':TasksModel(request)}
+    context = {'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'social_media_manager/dashboard.html', context)
 
 def CustomersPage(request):
     Customers = Customer.objects.all()
-    context = {'Customers':Customers, 'base':base(request), 'TasksModel':TasksModel(request)}
+    context = {'Customers':Customers, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'social_media_manager/customers.html', context)
 
 def AddCustomerPage(request):
@@ -31,7 +31,7 @@ def AddCustomerPage(request):
                                     shopee=shopee, facebook=facebook)
             return redirect('CustomersPage')
 
-    context = {'PersonForm':person_form, 'CustomerForm':Customer_form, 'base':base(request), 'TasksModel':TasksModel(request)}
+    context = {'PersonForm':person_form, 'CustomerForm':Customer_form, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'social_media_manager/add_customer.html', context) 
 
 def UpdateCustomerPage(request, pk):
@@ -47,7 +47,7 @@ def UpdateCustomerPage(request, pk):
             CustomerForm.save()
             return redirect('CustomersPage')
     
-    context = {'PersonForm':PersonForm, 'CustomerForm':CustomerForm, 'base':base(request), 'TasksModel':TasksModel(request)}
+    context = {'PersonForm':PersonForm, 'CustomerForm':CustomerForm, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'social_media_manager/update_customer.html', context) 
 
 def DeleteCustomerPage(request, pk):
@@ -56,13 +56,13 @@ def DeleteCustomerPage(request, pk):
         customer.delete()
         return redirect('CustomersPage')
 
-    context = {'Customer':customer, 'base':base(request), 'TasksModel':TasksModel(request)}
+    context = {'Customer':customer, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'social_media_manager/delete_customer.html', context)
 
 def QuestionnairesPage(request):
     Questionnaires = Questionnaire.objects.all()
 
-    context = {'Questionnaires':Questionnaires, 'base':base(request), 'TasksModel':TasksModel(request)}
+    context = {'Questionnaires':Questionnaires, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'social_media_manager/questionnaires.html', context)
 
 def CreateQuestionnairePage(request):
@@ -73,13 +73,13 @@ def CreateQuestionnairePage(request):
             form.save()
         return redirect('QuestionnairesPage')
 
-    context = {'form':form, 'base':base(request), 'TasksModel':TasksModel(request)}
+    context = {'form':form, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'social_media_manager/create_questionnaire.html', context)
 
 def QuestionnairePage(request, pk):
     questionnaire = Questionnaire.objects.get(id=pk)
 
-    context = {'Questionnaire':questionnaire, 'base':base(request), 'TasksModel':TasksModel(request)}
+    context = {'Questionnaire':questionnaire, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'social_media_manager/questionnaire.html', context)
 
 def PublishQuestionnairePage(request, pk):
@@ -94,7 +94,7 @@ def PublishQuestionnairePage(request, pk):
     
         return redirect('QuestionnairePage', pk)
 
-    context = {'form':form, 'Questionnaire':questionnaire, 'base':base(request), 'TasksModel':TasksModel(request)}
+    context = {'form':form, 'Questionnaire':questionnaire, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'social_media_manager/publish_questionnaire.html', context)
 
 def ColseQuestionnairePage(request, pk):
@@ -105,7 +105,7 @@ def ColseQuestionnairePage(request, pk):
     
         return redirect('QuestionnairePage', pk)
 
-    context = {'Questionnaire':questionnaire, 'base':base(request), 'TasksModel':TasksModel(request)}
+    context = {'Questionnaire':questionnaire, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'social_media_manager/close_questionnaire.html', context)
 
 def EditQuestionnairePage(request, pk):
@@ -117,7 +117,7 @@ def EditQuestionnairePage(request, pk):
             form.save()
         return redirect('QuestionnairesPage')
 
-    context = {'form':form,'Questionnaire':questionnaire, 'base':base(request), 'TasksModel':TasksModel(request)}
+    context = {'form':form,'Questionnaire':questionnaire, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'social_media_manager/edit_questionnaire.html', context)
 
 def DeleteQuestionnairePage(request, pk):
@@ -126,24 +126,24 @@ def DeleteQuestionnairePage(request, pk):
         questionnaire.delete()
         return redirect('QuestionnairesPage')
 
-    context = {'Questionnaire':questionnaire, 'base':base(request), 'TasksModel':TasksModel(request)}
+    context = {'Questionnaire':questionnaire, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'social_media_manager/delete_questionnaire.html', context)
 
 def QuestionnaireQuestionsPage(request, pk):
     questionnaire = Questionnaire.objects.get(id=pk)
 
-    context = {'Questionnaire':questionnaire, 'base':base(request), 'TasksModel':TasksModel(request)}
+    context = {'Questionnaire':questionnaire, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'social_media_manager/questionnaire_questions.html', context)
 
 def AddQuestionPage(request):
 
-    context = {'base':base(request),'TasksModel':TasksModel(request)}
+    context = {'base':base(request),'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'social_media_manager/add_question.html', context)
 
 def QuestionnaireResultPage(request, pk):
     questionnaire = Questionnaire.objects.get(id=pk)
 
-    context = {'Questionnaire':questionnaire, 'base':base(request), 'TasksModel':TasksModel(request)}
+    context = {'Questionnaire':questionnaire, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'social_media_manager/questionnaire_result.html', context)
 
 

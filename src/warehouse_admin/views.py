@@ -2,7 +2,7 @@ from django.shortcuts import redirect, render
 from django.contrib import messages
 from distributor.models import Distributor
 from main.decorators import allowed_users
-from main.tasks import TasksModel
+from main.tasks import getEmployeesTasks
 from main.utils import getUserBaseTemplate as base
 from .models import (ItemCard, RetailCard, Stock, ItemType, Batch,
                          GoodsMovement, RetailItem)
@@ -15,13 +15,13 @@ from .forms import (AddGoodsForm, RegisterItemForm, AddBatchForm,
 @allowed_users(allowed_roles=['Admin', 'Warehouse Admin'])
 def warehouseAdminDashboard(request):
     goodsMovement = GoodsMovement.objects.all().order_by('-id')[:3]
-    context = {'GoodsMovement':goodsMovement, 'TasksModel':TasksModel(request)}
+    context = {'GoodsMovement':goodsMovement, 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'warehouse_admin/dashboard.html', context)
 # --------------------------Main Storage-----------------------------
 def MainStorageGoodsPage(request):
     MainStorageStock = Stock.objects.filter(id=1)[0]
     Items = ItemCard.objects.filter(stock=MainStorageStock, status='Good', is_transforming=False).order_by('type')
-    context = {'Items':Items, 'base':base(request), 'TasksModel':TasksModel(request)}
+    context = {'Items':Items, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'warehouse_admin/main_storage_goods.html', context)
 
 def AddGoodsPage(request):
@@ -42,13 +42,13 @@ def AddGoodsPage(request):
                                     received_from=received_from)
         return redirect('MainStorageGoodsPage')
 
-    context = {'form':form, 'base':base(request), 'TasksModel':TasksModel(request)}
+    context = {'form':form, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'warehouse_admin/add_goods.html', context)
 
 # --------------------------Registered Items--------------------------
 def RegisteredItemsPage(request):
     Items= ItemType.objects.all()
-    context = {'Items':Items, 'base':base(request), 'TasksModel':TasksModel(request)}
+    context = {'Items':Items, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'warehouse_admin/registered_items.html', context)
 
 def RegisterItemPage(request):
@@ -58,12 +58,12 @@ def RegisterItemPage(request):
         if form.is_valid:
             form.save()
         return redirect('RegisteredItemsPage')
-    context = {'form':form, 'base':base(request), 'TasksModel':TasksModel(request)}
+    context = {'form':form, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'warehouse_admin/register_item.html', context)   
 # -------------------------------Batches-------------------------------
 def BatchesPage(request):
     Batches = Batch.objects.all()
-    context = {'Batches':Batches, 'base':base(request), 'TasksModel':TasksModel(request)}
+    context = {'Batches':Batches, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'warehouse_admin/batches.html', context)
 
 def AddBatchPage(request):
@@ -73,7 +73,7 @@ def AddBatchPage(request):
         if form.is_valid:
             form.save()
         return redirect('BatchesPage')
-    context = {'form':form, 'base':base(request), 'TasksModel':TasksModel(request)}
+    context = {'form':form, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'warehouse_admin/add_batch.html', context)
 # --------------------------Distributed Goods---------------------------
 def DistributedGoodsPage(request):
@@ -91,13 +91,13 @@ def DistributedGoodsPage(request):
         Distributors[distributor.id] = {'distributor': distributor,
                                         'quantityOfGoods':quantityOfGoods}
 
-    context = {'Distributors':Distributors, 'base':base(request), 'TasksModel':TasksModel(request)}
+    context = {'Distributors':Distributors, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'warehouse_admin/distributed_goods.html', context)
 
 def DistributorStockPage(request, pk):
     distributor = Distributor.objects.get(id=pk)
     Items = ItemCard.objects.filter(stock=distributor.stock).order_by('type')
-    context = {'distributor':distributor, 'Items':Items, 'base':base(request), 'TasksModel':TasksModel(request)}
+    context = {'distributor':distributor, 'Items':Items, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'warehouse_admin/distributor_stock.html', context)
 
 def SendGoodsPage(request, pk):
@@ -143,18 +143,18 @@ def SendGoodsPage(request, pk):
                 messages.info(request, "Item or quantity is not available in the stock")
                 return redirect('SendGoodsPage', pk)
         return redirect('DistributorStockPage', pk)
-    context = {'availableItems':availableItems, 'form':form, 'base':base(request), 'TasksModel':TasksModel(request)}
+    context = {'availableItems':availableItems, 'form':form, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'warehouse_admin/send_goods.html', context)
 
 def GoodsMovementPage(request):
     goodsMovement = GoodsMovement.objects.all()
-    context = {'GoodsMovement':goodsMovement, 'base':base(request), 'TasksModel':TasksModel(request)}
+    context = {'GoodsMovement':goodsMovement, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'warehouse_admin/goods_movement.html', context)
 
 def DamagedGoodsPage(request):
     MainStorageStock = Stock.objects.get(id=1)
     Items = ItemCard.objects.filter(stock=MainStorageStock, status='Damaged', is_transforming=False)
-    context = {'Items':Items, 'base':base(request), 'TasksModel':TasksModel(request)}
+    context = {'Items':Items, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'warehouse_admin/damaged_goods.html', context)
 
 def AddDamagedGoodsPage(request):
@@ -195,13 +195,13 @@ def AddDamagedGoodsPage(request):
                 messages.info(request, "Item or quantity is not available in the stock")
                 return redirect('AddDamagedGoodsPage')
         return redirect('DamagedGoodsPage')
-    context = {'availableItems':availableItems, 'form':form, 'base':base(request), 'TasksModel':TasksModel(request)}
+    context = {'availableItems':availableItems, 'form':form, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'warehouse_admin/add_damaged_goods.html', context)
 
 def TransformedGoodsPage(request):
     Items = ItemCard.objects.filter(is_transforming=True)
     
-    context = {'Items':Items, 'base':base(request), 'TasksModel':TasksModel(request)}
+    context = {'Items':Items, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'warehouse_admin/transformed_goods.html', context)
 
 def ApproveTransformedGoods(request, pk):
@@ -222,7 +222,7 @@ def ApproveTransformedGoods(request, pk):
 def RetailGoodsPage(request):
     retailCard = RetailCard.objects.all()
     retailItem = RetailItem.objects.all()
-    context = {'retailItem':retailItem, 'retailCard':retailCard, 'base':base(request), 'TasksModel':TasksModel(request)}
+    context = {'retailItem':retailItem, 'retailCard':retailCard, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'warehouse_admin/retail_goods.html', context)
 
 def ConvertToRetailPage(request):
@@ -257,7 +257,7 @@ def ConvertToRetailPage(request):
                 return redirect('ConvertToRetailPage')
         return redirect('RetailGoodsPage')
 
-    context = {'availableItems':availableItems, 'form':form, 'base':base(request),'TasksModel':TasksModel(request)}
+    context = {'availableItems':availableItems, 'form':form, 'base':base(request),'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'warehouse_admin/convert_to_retail.html', context)
 
 def AddRetailGoodsPage(request):
@@ -284,5 +284,5 @@ def AddRetailGoodsPage(request):
             q.save()
         return redirect('RetailGoodsPage')
 
-    context = {'form':form, 'base':base(request),'TasksModel':TasksModel(request)}
+    context = {'form':form, 'base':base(request),'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'warehouse_admin/add_retail_goods.html', context)

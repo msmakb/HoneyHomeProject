@@ -1,4 +1,16 @@
 {
+   "emmet.includeLanguages": {
+      "django-html": "html"
+   },
+   
+   "beautify.language": {
+      "html": [
+         "htm",
+         "html",
+         "django-html"
+      ]
+   },
+   
    "python.terminal.activateEnvInCurrentTerminal": true,
    "python.defaultInterpreterPath":"/home/msmab/Documents/Git/HoneyHomeProject/bin/python",
    "editor.formatOnSave": true,
@@ -13,16 +25,6 @@
       "**/requirements{/**,*}.{txt,in}": "pip-requirements"
    },
 
-   "emmet.includeLanguages": {
-      "django-html": "html"
-   },
 
-   "beautify.language": {
-      "html": [
-         "htm",
-         "html",
-         "django-html"
-      ]
-   },
    "git.ignoreLimitWarning": true,
 }

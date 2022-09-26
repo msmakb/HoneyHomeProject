@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.db.models import Q
-from main.tasks import TasksModel
+from main.tasks import getEmployeesTasks
 from main.utils import getUserBaseTemplate as base
 from warehouse_admin.models import ItemCard, RetailItem
 from .filters import SalesFilter
@@ -12,7 +12,7 @@ from .models import Expenses, Sales
 def Dashboard(request):
     sales = Sales.objects.filter(is_approved=True).order_by('-id')[:5]
 
-    context = {'Sales':sales, 'TasksModel':TasksModel(request)}
+    context = {'Sales':sales, 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'accounting_manager/dashboard.html', context)
 
 def SalesPage(request):
@@ -20,7 +20,7 @@ def SalesPage(request):
     filter = SalesFilter(request.GET, sales)
     sales = filter.qs
 
-    context = {'SalesFilter':filter, 'Sales':sales, 'base':base(request),'TasksModel':TasksModel(request)}
+    context = {'SalesFilter':filter, 'Sales':sales, 'base':base(request),'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'accounting_manager/sales.html', context)
 
 def AddSalesPage(request):
@@ -43,7 +43,7 @@ def AddSalesPage(request):
 
         return redirect('SalesPage')
 
-    context = {'form':form, 'availableItems':availableItems, 'base':base(request), 'TasksModel':TasksModel(request)}
+    context = {'form':form, 'availableItems':availableItems, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'accounting_manager/add_sales.html', context)
 
 def PricingPage(request):
@@ -66,7 +66,7 @@ def PricingPage(request):
             task.save()
         messages.success(request, f"The item '{item.type}' sent from '{item.received_from}' to '{item.getReceiver()}' has been priced by '{item.price}IDR' for evry item of '{item.quantity}' totaled '{item.getTotal()}IDR'")
 
-    context = {'UnpricedGoods':unpricedGoods, 'base':base(request), 'TasksModel':TasksModel(request)}
+    context = {'UnpricedGoods':unpricedGoods, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'accounting_manager/pricing.html', context)
 
 def ExpensesPage(request):
@@ -79,7 +79,7 @@ def ExpensesPage(request):
     def multiply(value, arg):
         return value * arg
 
-    context = {'multiply':multiply, 'Expenses':expenses, 'base':base(request), 'TasksModel':TasksModel(request)}
+    context = {'multiply':multiply, 'Expenses':expenses, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'accounting_manager/expenses.html', context)
 
 def AddExpensesPage(request):
@@ -91,7 +91,7 @@ def AddExpensesPage(request):
         
         return redirect("ExpensesPage")
 
-    context = {'form':form, 'base':base(request), 'TasksModel':TasksModel(request)}
+    context = {'form':form, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'accounting_manager/add_expenses.html', context)
 
 def UpdateExpensePage(request, pk):
@@ -104,7 +104,7 @@ def UpdateExpensePage(request, pk):
 
         return redirect("ExpensesPage")
 
-    context = {'form':form, 'base':base(request), 'TasksModel':TasksModel(request)}
+    context = {'form':form, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'accounting_manager/update_expense.html', context)
 
 def DeleteExpensePage(request, pk):
@@ -114,13 +114,13 @@ def DeleteExpensePage(request, pk):
 
         return redirect("ExpensesPage")
 
-    context = {'Expense':Expense, 'base':base(request), 'TasksModel':TasksModel(request)}
+    context = {'Expense':Expense, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'accounting_manager/delete-expensePage.html', context)
 
 def ApprovePaymentsPage(request):
     sales = Sales.objects.filter(is_approved=False)
 
-    context = {'Sales':sales, 'base':base(request), 'TasksModel':TasksModel(request)}
+    context = {'Sales':sales, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'accounting_manager/approve_payments.html', context)
 
 def ApprovePayment(request, pk):

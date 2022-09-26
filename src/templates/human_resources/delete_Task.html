@@ -1,12 +1,13 @@
 {% extends base %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
-<div >
+
+<div>
   <div class="modal-body">
     <p>Are you sure you want to remove Task</p>
-    <p>Task: {{Task.name}}</p>
-    <p>Employee: {{Task.employee}}</p>
-    <p>Position: {{Task.employee.position}}</p>
+    <p>Task: {{ Task.name }}</p>
+    <p>Employee: {{ Task.employee }}</p>
+    <p>Position: {{ Task.employee.position }}</p>
   </div>
   <div class="modal-footer">
     <a href="{% url 'TaskPage' Task.id %}" class="btn btn-secondary">Close</a>
@@ -16,4 +17,5 @@
     </form>
   </div>
 </div>
+
 {% endblock %}

@@ -101,10 +101,9 @@ class EmployeePositionForm(ModelForm):
 
         employees = Employee.objects.all()
         for employee in employees:
-            pos = (f'{existingPosition}', f'{existingPosition}')
             existingPosition = employee.position
-            if pos in POSITIONS:
-                POSITIONS.remove(pos)
+            if (f'{existingPosition}', f'{existingPosition}') in POSITIONS:
+                POSITIONS.remove((f'{existingPosition}', f'{existingPosition}'))
 
         widget = forms.Select(
             attrs={
