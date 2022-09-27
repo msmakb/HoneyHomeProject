@@ -84,12 +84,14 @@ def DistributedGoodsPage(request):
         if stock == MainStorageStock:
             continue
         quantityOfGoods = 0
-        distributor = Distributor.objects.get(stock=stock)
-        distributorStock = ItemCard.objects.filter(stock=stock)
-        for stock in distributorStock:
-            quantityOfGoods += stock.quantity
-        Distributors[distributor.id] = {'distributor': distributor,
-                                        'quantityOfGoods':quantityOfGoods}
+        try:
+            distributor = Distributor.objects.get(stock=stock)
+            distributorStock = ItemCard.objects.filter(stock=stock)
+            for stock in distributorStock:
+                quantityOfGoods += stock.quantity
+            Distributors[distributor.id] = {'distributor': distributor,
+                                            'quantityOfGoods':quantityOfGoods}
+        except Distributor.DoesNotExist: pass
 
     context = {'Distributors':Distributors, 'base':base(request), 'getEmployeesTasks':getEmployeesTasks(request)}
     return render(request, 'warehouse_admin/distributed_goods.html', context)

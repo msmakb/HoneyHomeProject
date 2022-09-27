@@ -8,7 +8,11 @@
     <p>Position: {{ Employee.position }}</p>
   </div>
   <div class="modal-footer">
-    <a href="{% url 'EmployeePage' Employee.id %}" class="btn btn-secondary">Close</a>
+    <a href="{% if user.groups.all.0.name == "CEO" %}
+             {% url 'EmployeePage-CEO' Employee.id %}
+             {% else %}
+             {% url 'EmployeePage' Employee.id %}
+             {% endif %}" class="btn btn-secondary">Close</a>
     <form method="POST">
       {% csrf_token %}
       <button type="submit" class="btn btn-xs btn-outline-danger">Delete</button>

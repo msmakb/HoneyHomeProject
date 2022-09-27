@@ -24,6 +24,7 @@ class ItemType(models.Model):
 
 class Stock(models.Model):
     id = models.AutoField(primary_key=True)
+    
 
 class ItemCard(models.Model):
     STATUS = [

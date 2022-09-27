@@ -92,18 +92,24 @@ class EmployeePositionForm(ModelForm):
         super(EmployeePositionForm, self).__init__(*args, **kwargs)
 
         POSITIONS = [
+            ('CEO', 'CEO'),
             ('Human Resources', 'Human Resources'),
             ('Warehouse Admin', 'Warehouse Admin'),
             ('Accounting Manager', 'Accounting Manager'),
             ('Social Media Manager', 'Social Media Manager'),
-            # ('Designer', 'Designer'),
+            ('Designer', 'Designer'),
         ]
 
         employees = Employee.objects.all()
         for employee in employees:
             existingPosition = employee.position
+            if 'instance' in kwargs:
+                if kwargs['instance'].position == existingPosition:
+                    continue
+
             if (f'{existingPosition}', f'{existingPosition}') in POSITIONS:
-                POSITIONS.remove((f'{existingPosition}', f'{existingPosition}'))
+                POSITIONS.remove(
+                    (f'{existingPosition}', f'{existingPosition}'))
 
         widget = forms.Select(
             attrs={
@@ -116,7 +122,7 @@ class EmployeePositionForm(ModelForm):
             choices=POSITIONS,
             widget=widget
         )
-
+                
     class Meta:
         model = Employee
         fields = ['position', ]
@@ -161,3 +167,4 @@ class AddTaskForm(ModelForm):
                 }
             ),
         }
+        

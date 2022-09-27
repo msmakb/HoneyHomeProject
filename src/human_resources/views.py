@@ -1,3 +1,4 @@
+from turtle import position
 from django.contrib.auth.models import Group
 from django.db.models import Q
 from django.shortcuts import redirect, render
@@ -13,6 +14,7 @@ from . import alerts
 from .evaluation import getEvaluation
 from .forms import AddPersonForm, EmployeePositionForm, AddTaskForm
 from .models import Employee, Task, TaskRate, Week, WeeklyRate
+from .utils import isUserAllowedToModify
 
 
 # ------------------------------Dashboard------------------------------ #
@@ -53,7 +55,10 @@ def AddEmployeePage(request):
             Employee.objects.create(position=position)
             alerts.employee_added(request)
 
-            return redirect('EmployeesPage')
+            if request.user.groups.all()[0].name == "CEO":
+                return redirect('EmployeesPage-CEO')
+            else:
+                return redirect('EmployeesPage')
 
     context = {'PersonForm': person_form, 'position_form': position_form,
                'base': base(request), 'getEmployeesTasks': getEmployeesTasks(request)}
@@ -65,6 +70,9 @@ def EmployeePage(request, pk):
     # Fetch all employee's data from database
     employee = Employee.objects.get(id=pk)
     evaluation = getEvaluation(emp_id=pk)
+    # Check if it's CEO page.
+    if not isUserAllowedToModify(request.user, employee.position, "CEO"): 
+        return redirect("Unauthorized")
     # If changing the photo has been requested
     if request.method == 'POST':
         # Get the uploaded image by the user
@@ -84,6 +92,9 @@ def UpdateEmployeePage(request, pk):
     # Getting the employee and person object from database
     employee = Employee.objects.get(id=pk)
     person = Person.objects.get(id=employee.person.id)
+    # Check if it's CEO page.
+    if not isUserAllowedToModify(request.user, employee.position, "CEO"): 
+        return redirect("Unauthorized")
     # Setting up the forms
     position_form = EmployeePositionForm(instance=employee)
     person_form = AddPersonForm(instance=person)
@@ -101,7 +112,10 @@ def UpdateEmployeePage(request, pk):
             Group.objects.get(name=position).user_set.add(employee.account)
             alerts.employee_data_updated(request)
 
-            return redirect('EmployeePage', pk)
+            if request.user.groups.all()[0].name == "CEO":
+                return redirect('EmployeePage-CEO', pk)
+            else:
+                return redirect('EmployeePage', pk)
 
     context = {'PersonForm': person_form, 'position_form': position_form, 'Employee': employee,
                'base': base(request), 'getEmployeesTasks': getEmployeesTasks(request)}
@@ -112,13 +126,18 @@ def UpdateEmployeePage(request, pk):
 def DeleteEmployeePage(request, pk):
     # Getting the employee object from database
     employee = Employee.objects.get(id=pk)
-    # Check if it is a post method
+    # Check if it is a post method# Check if it's CEO page.
+    if not isUserAllowedToModify(request.user, employee.position, "CEO"): 
+        return redirect("Unauthorized")
     if request.method == "POST":
         # Delete the employee
         employee.delete()
         alerts.employee_removed(request)
 
-        return redirect('EmployeesPage')
+        if request.user.groups.all()[0].name == "CEO":
+            return redirect('EmployeesPage-CEO')
+        else:
+            return redirect('EmployeesPage')
 
     context = {'Employee': employee, 'base': base(request),
                'getEmployeesTasks': getEmployeesTasks(request)}
@@ -151,7 +170,10 @@ def AddDistributorPage(request):
             Distributor.objects.create()
             alerts.distributor_added(request)
 
-            return redirect('DistributorsPage')
+            if request.user.groups.all()[0].name == "CEO":
+                return redirect('DistributorsPage-CEO')
+            else:
+                return redirect('DistributorsPage')
 
     context = {'PersonForm': person_form, 'base': base(request),
                'getEmployeesTasks': getEmployeesTasks(request)}
@@ -192,7 +214,10 @@ def UpdateDistributorPage(request, pk):
             person_form.save()
             alerts.distributor_data_updated(request)
 
-            return redirect('DistributorPage', pk)
+            if request.user.groups.all()[0].name == "CEO":
+                return redirect('DistributorPage-CEO', pk)
+            else:
+                return redirect('DistributorPage', pk)
 
     context = {'PersonForm': person_form, 'Distributor': distributor,
                'base': base(request), 'getEmployeesTasks': getEmployeesTasks(request)}
@@ -209,7 +234,10 @@ def DeleteDistributorPage(request, pk):
         distributor.delete()
         alerts.distributor_removed(request)
 
-        return redirect('DistributorsPage')
+        if request.user.groups.all()[0].name == "CEO":
+            return redirect('DistributorsPage-CEO')
+        else:
+            return redirect('DistributorsPage')
 
     context = {'Distributor': distributor, 'base': base(request),
                'getEmployeesTasks': getEmployeesTasks(request)}
@@ -220,7 +248,10 @@ def DeleteDistributorPage(request, pk):
 # ------------------------------Tasks------------------------------ #
 def TasksPage(request):
     # Getting all tasks data from database
-    Tasks = Task.objects.all()
+    if request.user.groups.all()[0].name == "Human Resources":
+        Tasks = Task.objects.filter(~Q(employee__position="Human Resources"))
+    else:
+        Tasks = Task.objects.all()
 
     context = {'Tasks': Tasks, 'base': base(request),
                'getEmployeesTasks': getEmployeesTasks(request)}
@@ -240,7 +271,10 @@ def AddTaskPage(request):
             form.save()
             alerts.Task_added(request)
 
-            return redirect('TasksPage')
+            if request.user.groups.all()[0].name == "CEO":
+                return redirect('TasksPage-CEO')
+            else:
+                return redirect('TasksPage')
 
     context = {'form': form, 'base': base(request),
                'getEmployeesTasks': getEmployeesTasks(request)}
@@ -251,6 +285,9 @@ def AddTaskPage(request):
 def TaskPage(request, pk):
     # Fetch the task's data from database
     task = Task.objects.get(id=pk)
+    # Check if the user allowed to view the task page
+    if not isUserAllowedToModify(request.user, task.employee.position, "Human Resources"): 
+        return redirect("Unauthorized")
     # Get the task rate if it exist, else set it to None
     try:
         task_rate = TaskRate.objects.get(task=task)
@@ -265,7 +302,10 @@ def TaskPage(request, pk):
 
 def UpdateTaskPage(request, pk):
     # Fetch the task's data from database
-    task = Task.objects.get(id=pk)
+    task = Task.objects.get(id=pk)    
+    # Check if the user allowed to view the task page
+    if not isUserAllowedToModify(request.user, task.employee.position, "Human Resources"): 
+        return redirect("Unauthorized")
     # Setting up the form
     form = AddTaskForm(instance=task)
     # Check if it is a post method
@@ -277,7 +317,10 @@ def UpdateTaskPage(request, pk):
             form.save()
             alerts.Task_data_updated(request)
 
-            return redirect('TaskPage', pk)
+            if request.user.groups.all()[0].name == "CEO":
+                return redirect('TaskPage-CEO', pk)
+            else:
+                return redirect('TaskPage', pk)
 
     context = {'form': form, 'TaskID': task.id, 'base': base(request),
                'getEmployeesTasks': getEmployeesTasks(request)}
@@ -288,13 +331,19 @@ def UpdateTaskPage(request, pk):
 def DeleteTaskPage(request, pk):
     # Fetch the task's data from database
     task = Task.objects.get(id=pk)
+    # Check if the user allowed to view the task page
+    if not isUserAllowedToModify(request.user, task.employee.position, "Human Resources"): 
+        return redirect("Unauthorized")
     # Check if it is a post method
     if request.method == "POST":
         # Delete the task. note: deleteTaskRate function in signals.py will be executed
         task.delete()
         alerts.Task_removed(request)
 
-        return redirect('TasksPage')
+        if request.user.groups.all()[0].name == "CEO":
+            return redirect('TasksPage-CEO')
+        else:
+            return redirect('TasksPage')
 
     context = {'Task': task, 'base': base(request),
                'getEmployeesTasks': getEmployeesTasks(request)}
@@ -363,7 +412,10 @@ def WeeklyEvaluationPage(request):
             # Rate the task automatically
             TaskRate.objects.create(task=task, on_time_rate=5, rate=5)
 
-            return redirect('EvaluationPage')
+            if request.user.groups.all()[0].name == "CEO":
+                return redirect('EvaluationPage-CEO')
+            else:
+                return redirect('EvaluationPage')
 
     template = 'human_resources/weekly_rate.html'
     return render(request, template, context)
@@ -399,19 +451,19 @@ def TaskEvaluationPage(request):
             employee__position="Human Resources",
             description=f"Don't forget to rate {task.employee.person.name}'s submitted task. '{task.name}' Task.",
             is_rated=False)
+        # Check if the HR rate the task on time
         on_time = 5
         status = 'On-Time'
         if auto_task.status != 'In-Progress':
             on_time = 2.5
             status = 'Late-Submission'
+        # Rate the task automatically
         TaskRate.objects.create(
             task=auto_task, on_time_rate=on_time, rate=float(5))
         auto_task.status = status
         auto_task.is_rated = True
         auto_task.submission_date = timezone.now()
         auto_task.save()
-        print(auto_task.description)
-        print(TaskRate.objects.all().order_by('-id')[0])
         # Success message
         alerts.tasks_evaluation_done(request)
     # If there is no tasks to rate just send a message

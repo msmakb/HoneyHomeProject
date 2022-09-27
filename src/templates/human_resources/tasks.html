@@ -4,7 +4,12 @@
 {% include 'alerts.html' %}
 
 <div style="float: right;">
-    <td><a id="button" class="btn btn-xs btn-info" href="{% url 'AddTaskPage' %}">Add Task</a></td>
+    <td><a id="button" class="btn btn-xs btn-info" 
+        href="{% if user.groups.all.0.name == "CEO" %}
+              {% url 'AddTaskPage-CEO' %}
+              {% else %}
+              {% url 'AddTaskPage' %}
+              {% endif %}">Add Task</a></td>
 </div>
 <h2>Employees' Tasks</h2>
 <table style="text-align:center;" class="table table-striped">
@@ -28,7 +33,12 @@
         <td>{{ task.status }}</td>
         <td>{{ task.receiving_date }}</td>
         <td>{% if task.submission_date == None %} - {% else %}{{ task.submission_date }}{% endif %}</td>
-        <td><a class="btn btn-sm btn-info" href="{% url 'TaskPage' task.id %}">View</a></td>
+        <td><a class="btn btn-sm btn-info" 
+            href="{% if request.user.groups.all.0.name == "CEO" %}
+                  {% url 'TaskPage-CEO' task.id %}
+                  {% else %}
+                  {% url 'TaskPage' task.id %}
+                  {% endif %}">View</a></td>
     </tr>
     {% endfor %}
     </tbody>

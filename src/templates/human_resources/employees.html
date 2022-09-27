@@ -5,7 +5,12 @@
 {% include 'alerts.html' %}
 
 <div style="float: right;">
-    <td><a id="button" class="btn btn-xs btn-info" href="{% url 'AddEmployeePage' %}">Add Employee</a></td>
+    <td><a id="button" class="btn btn-xs btn-info" 
+        href="{% if user.groups.all.0.name == "CEO" %}
+              {% url 'AddEmployeePage-CEO' %}
+              {% else %}
+              {% url 'AddEmployeePage' %}
+              {% endif %}">Add Employee</a></td>
 </div>
 <h2>Employees</h2>
 <table style="text-align:center;" class="table table-striped">
@@ -26,8 +31,28 @@
             <td>{{ employee.person.gender }}</td>
             <td>{{ employee.position }}</td>
             <td>{{ employee.person.nationality }}</td>
-            <td>{% getAllTimeEvaluation employee.id %}</td>
-            <td><a class="btn btn-sm btn-info" href="{% url 'EmployeePage' employee.id %}">View</a></td>
+            <td>{% if employee.position == "CEO" %} - {% else %}{% getAllTimeEvaluation employee.id %}{% endif %}</td>
+            <td>
+                {% for g in request.user.groups.all %}
+                    {% if employee.position == "CEO" and g.name == "CEO" %}
+                        <a class="btn btn-sm btn-info" 
+                        href="{% if user.groups.all.0.name == "CEO" %}
+                              {% url 'EmployeePage-CEO' employee.id %}
+                              {% else %}
+                              {% url 'EmployeePage' employee.id %}
+                              {% endif %}">View</a>
+                    {% elif employee.position == "CEO" and g.name != "CEO" %}
+                        <a class="btn btn-sm btn-secondary" style="pointer-events: none;">View</a>
+                    {% else %}
+                        <a class="btn btn-sm btn-info" 
+                        href="{% if user.groups.all.0.name == "CEO" %}
+                              {% url 'EmployeePage-CEO' employee.id %}
+                              {% else %}
+                              {% url 'EmployeePage' employee.id %}
+                              {% endif %}">View</a>
+                    {% endif %}
+                {% endfor %}
+            </td>
         </tr>
         {% endfor %}
     </tbody>

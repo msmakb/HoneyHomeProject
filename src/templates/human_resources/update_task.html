@@ -29,7 +29,11 @@
             <div>{{ form.deadline_date }}</div>
         </div>
         <div style="width: 250px; margin:auto; margin-top: 20px;">
-            <a href="{% url 'TaskPage' TaskID %}" class="btn btn-secondary">Cancel</a>
+            <a href="{% if user.groups.all.0.name == "CEO" %}
+                     {% url 'TaskPage-CEO' TaskID %}
+                     {% else %}
+                     {% url 'TaskPage' TaskID %}
+                     {% endif %}" class="btn btn-secondary">Cancel</a>
             <button type="submit" class="btn btn-xs btn-info">Save Changes</button>
         </div>
     </div>

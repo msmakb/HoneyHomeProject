@@ -15,12 +15,20 @@
         {% if not Task.submission_date %}
         <div class="col-md">
             <a class="btn btn-outline-info  btn-sm btn-block" style="width: 100% !important;"
-                href="{% url 'UpdateTaskPage' Task.id %}">Update Task</a>
+                href="{% if user.groups.all.0.name == "CEO" %}
+                      {% url 'UpdateTaskPage-CEO' Task.id %}
+                      {% else %}
+                      {% url 'UpdateTaskPage' Task.id %}
+                      {% endif %}">Update Task</a>
         </div>
         {% endif %}
         <div class="col-md">
             <a class="btn btn-outline-danger  btn-sm btn-block" style="width: 100% !important;"
-                href="{% url 'DeleteTaskPage' Task.id %}">Remove Task</a>
+                href="{% if user.groups.all.0.name == "CEO" %}
+                      {% url 'DeleteTaskPage-CEO' Task.id %}
+                      {% else %}
+                      {% url 'DeleteTaskPage' Task.id %}
+                      {% endif %}">Remove Task</a>
         </div>
     </div>
 </div>
@@ -78,7 +86,12 @@
                     {% elif g.name == "Human Resources" %}
                     <td> - </td>
                     {% else %}
-                    <td><a class="btn btn-outline-info  btn-sm btn-block" href="{% url 'TaskEvaluationPage' %}">Rate</a>
+                    <td><a class="btn btn-outline-info  btn-sm btn-block" 
+                        href="{% if user.groups.all.0.name == "CEO" %}
+                              {% url 'TaskEvaluationPage-CEO' %}
+                              {% else %}
+                              {% url 'TaskEvaluationPage' %}
+                              {% endif %}">Rate</a>
                     </td>
                     {% endif %}
                     {% endfor %}

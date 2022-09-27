@@ -78,7 +78,7 @@ def tasks(request):
             Task.objects.create(
                 employee=emp,
                 name="Rate task",
-                description=f"Don't forget to rate {emp.person.name}'s submitted task. '{task.name}' Task.",
+                description=f"Don't forget to rate {task.employee.person.name}'s submitted task. '{task.name}' Task.",
                 deadline_date=timezone.now() + timedelta(days=3)
             )
 

@@ -9,7 +9,7 @@ def onAddingNewEmployee(sender, instance, created, **kwargs):
     This function called every time a new employee added.
     It creates a user account and assigns the person object to the employee.
     """
-    if created:
+    if created and instance.position != "CEO":
         person = Person.objects.all().order_by('-id')[0]
         # Create new user
         User.objects.create_user(username=str(person.name).split(' ')[0],

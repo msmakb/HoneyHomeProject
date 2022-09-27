@@ -29,7 +29,11 @@
         </div>
         <center>
             <div style="margin:auto; margin-top: 20px;">
-                <a href="{% url 'TasksPage' %}" class="btn btn-secondary">Cancel</a>
+                <a href="{% if user.groups.all.0.name == "CEO" %}
+                         {% url 'TasksPage-CEO' %}
+                         {% else %}
+                         {% url 'TasksPage' %}
+                         {% endif %}" class="btn btn-secondary">Cancel</a>
                 <button type="submit" class="btn btn-xs btn-info">Add Task</button>
             </div>
         </center>
