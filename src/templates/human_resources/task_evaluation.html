@@ -7,6 +7,7 @@
 <table style="text-align:center; vertical-align:middle;" class="table table-striped">
     <thead>
         <tr>
+            <th scope="col">NO.</th>
             <th scope="col">TASK</th>
             <th scope="col">EMPLOYEE NAME</th>
             <th scope="col">POSISTION</th>
@@ -20,6 +21,7 @@
     <tbody>
         {% for task in Tasks %}
         <tr>
+            <td>{{ forloop.counter }}</td>
             <td>{{ task.name }}</td>
             <td>{{ task.employee.person.name }}</td>
             <td>{{ task.employee.position }}</td>

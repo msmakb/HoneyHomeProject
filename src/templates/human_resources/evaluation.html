@@ -21,6 +21,7 @@
 <table style="text-align:center; vertical-align: middle;" class="table table-striped">
     <thead>
         <tr>
+            <th scope="col">NO.</th>
             <th scope="col">NAME</th>
             <th scope="col">GENDER</th>
             <th scope="col">POSITION</th>
@@ -35,6 +36,7 @@
     <tbody>
         {% for key, value in Evaluation.items %}
         <tr>
+            <td>{{ forloop.counter }}</td>
             <td>{{ value.Employee.person.name }}</td>
             <td>{{ value.Employee.person.gender }}</td>
             <td>{{ value.Employee.position }}</td>

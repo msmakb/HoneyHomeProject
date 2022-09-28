@@ -1,7 +1,7 @@
 from turtle import position
 from django.contrib.auth.models import Group
 from django.db.models import Q
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, get_object_or_404
 from django.utils import timezone
 
 from distributor.models import Distributor
@@ -67,8 +67,8 @@ def AddEmployeePage(request):
 
 
 def EmployeePage(request, pk):
-    # Fetch all employee's data from database
-    employee = Employee.objects.get(id=pk)
+    # Fetch all employee's data from database if exists, else 404
+    employee = get_object_or_404(Employee, id=pk)
     evaluation = getEvaluation(emp_id=pk)
     # Check if it's CEO page.
     if not isUserAllowedToModify(request.user, employee.position, "CEO"): 
@@ -89,8 +89,8 @@ def EmployeePage(request, pk):
 
 
 def UpdateEmployeePage(request, pk):
-    # Getting the employee and person object from database
-    employee = Employee.objects.get(id=pk)
+    # Getting the employee and person object from database if exists or 404
+    employee = get_object_or_404(Employee, id=pk)
     person = Person.objects.get(id=employee.person.id)
     # Check if it's CEO page.
     if not isUserAllowedToModify(request.user, employee.position, "CEO"): 
@@ -124,8 +124,8 @@ def UpdateEmployeePage(request, pk):
 
 
 def DeleteEmployeePage(request, pk):
-    # Getting the employee object from database
-    employee = Employee.objects.get(id=pk)
+    # Getting the employee object from database if exists or 404
+    employee = get_object_or_404(Employee, id=pk)
     # Check if it is a post method# Check if it's CEO page.
     if not isUserAllowedToModify(request.user, employee.position, "CEO"): 
         return redirect("Unauthorized")
@@ -182,8 +182,8 @@ def AddDistributorPage(request):
 
 
 def DistributorPage(request, pk):
-    # Fetch all distributor's data from database
-    distributor = Distributor.objects.get(id=pk)
+    # Fetch all distributor's data from database if exists or 404
+    distributor = get_object_or_404(Distributor, id=pk)
     # If changing the photo has been requested
     if request.method == 'POST':
         # Get the uploaded image by the user
@@ -200,8 +200,8 @@ def DistributorPage(request, pk):
 
 
 def UpdateDistributorPage(request, pk):
-    # Getting the distributor and person object from database
-    distributor = Distributor.objects.get(id=pk)
+    # Getting the distributor and person object from database if exists or 404
+    distributor = get_object_or_404(Distributor, id=pk)
     person = Person.objects.get(id=distributor.person.id)
     # Setting up the form
     person_form = AddPersonForm(instance=person)
@@ -226,8 +226,8 @@ def UpdateDistributorPage(request, pk):
 
 
 def DeleteDistributorPage(request, pk):
-    # Getting the distributor object from database
-    distributor = Distributor.objects.get(id=pk)
+    # Getting the distributor object from database if exists or 404
+    distributor = get_object_or_404(Distributor, id=pk)
     # Check if it is a post method
     if request.method == "POST":
         # Delete the distributor
@@ -283,8 +283,8 @@ def AddTaskPage(request):
 
 
 def TaskPage(request, pk):
-    # Fetch the task's data from database
-    task = Task.objects.get(id=pk)
+    # Fetch the task's data from database if exists or 404 
+    task = get_object_or_404(Task, id=pk)
     # Check if the user allowed to view the task page
     if not isUserAllowedToModify(request.user, task.employee.position, "Human Resources"): 
         return redirect("Unauthorized")
@@ -301,8 +301,8 @@ def TaskPage(request, pk):
 
 
 def UpdateTaskPage(request, pk):
-    # Fetch the task's data from database
-    task = Task.objects.get(id=pk)    
+    # Fetch the task's data from database if exists or 404
+    task = get_object_or_404(Task, id=pk)
     # Check if the user allowed to view the task page
     if not isUserAllowedToModify(request.user, task.employee.position, "Human Resources"): 
         return redirect("Unauthorized")
@@ -329,8 +329,8 @@ def UpdateTaskPage(request, pk):
 
 
 def DeleteTaskPage(request, pk):
-    # Fetch the task's data from database
-    task = Task.objects.get(id=pk)
+    # Fetch the task's data from database if exists or 404
+    task = get_object_or_404(Task, id=pk)
     # Check if the user allowed to view the task page
     if not isUserAllowedToModify(request.user, task.employee.position, "Human Resources"): 
         return redirect("Unauthorized")

@@ -16,6 +16,7 @@
 <table style="text-align:center;" class="table table-striped">
     <thead>
         <tr>
+            <th scope="col">NO.</th>
             <th scope="col">NAME</th>
             <th scope="col">GENDER</th>
             <th scope="col">POSITION</th>
@@ -27,6 +28,7 @@
     <tbody>
         {% for employee in Employees %}
         <tr>
+            <td>{{ forloop.counter }}</td>
             <td>{{ employee.person.name }}</td>
             <td>{{ employee.person.gender }}</td>
             <td>{{ employee.position }}</td>

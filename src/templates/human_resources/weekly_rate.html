@@ -8,6 +8,7 @@
 <table style="text-align:center;" class="table table-striped">
     <thead>
         <tr>
+            <th scope="col">NO.</th>
             <th scope="col">NAME</th>
             <th scope="col">GENDER</th>
             <th scope="col">NATIONALITY</th>
@@ -21,6 +22,7 @@
             {% if week_to_rate_exists %}
             {% for Employee in Employees %}
             <tr>
+                <td>{{ forloop.counter }}</td>
                 <td>{{ Employee.person.name }}</td>
                 <td>{{ Employee.person.gender }}</td>
                 <td>{{ Employee.person.nationality }}</td>
