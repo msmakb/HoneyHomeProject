@@ -12,4 +12,3 @@ class MainConfig(AppConfig):
         post_migrate.connect(createGroups, sender=self)
 
         return super().ready()
-

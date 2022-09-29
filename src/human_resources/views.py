@@ -11,7 +11,7 @@ from main.tasks import getEmployeesTasks
 from main.utils import getUserBaseTemplate as base
 
 from . import alerts
-from .evaluation import getEvaluation
+from .evaluation import getEvaluation, allEmployeesWeeklyEvaluations, allEmployeesMonthlyEvaluations, allEmployeesMonthlyTaskRate, allEmployeesMonthlyOverallEvaluation
 from .forms import AddPersonForm, EmployeePositionForm, AddTaskForm
 from .models import Employee, Task, TaskRate, Week, WeeklyRate
 from .utils import isUserAllowedToModify
@@ -20,8 +20,23 @@ from .utils import isUserAllowedToModify
 # ------------------------------Dashboard------------------------------ #
 @allowed_users(['Human Resources'])
 def humanResourcesDashboard(request):
+    in_progress = Task.objects.filter(status='In-Progress').count()
+    unsubmitted = Task.objects.filter(
+        Q(status="In-Progress") | Q(status="Overdue")).count()
+    employees = Employee.objects.all().count()
+    distributors = Distributor.objects.all().count()
+    print()
 
-    context = {'getEmployeesTasks': getEmployeesTasks(request)}
+    context = {'getEmployeesTasks': getEmployeesTasks(request),
+               'in_progress': in_progress,
+               'unsubmitted': unsubmitted,
+               'employees': employees,
+               'distributors': distributors,
+               'employees_weekly_rate': allEmployeesWeeklyEvaluations(),
+               'employees_monthly_rate': allEmployeesMonthlyEvaluations(),
+               'allEmployeesMonthlyTaskRate': allEmployeesMonthlyTaskRate(),
+               'employees_monthly_rate_overall_performance': allEmployeesMonthlyOverallEvaluation(),
+               }
     template = 'human_resources/dashboard.html'
     return render(request, template, context)
 
@@ -71,7 +86,7 @@ def EmployeePage(request, pk):
     employee = get_object_or_404(Employee, id=pk)
     evaluation = getEvaluation(emp_id=pk)
     # Check if it's CEO page.
-    if not isUserAllowedToModify(request.user, employee.position, "CEO"): 
+    if not isUserAllowedToModify(request.user, employee.position, "CEO"):
         return redirect("Unauthorized")
     # If changing the photo has been requested
     if request.method == 'POST':
@@ -93,7 +108,7 @@ def UpdateEmployeePage(request, pk):
     employee = get_object_or_404(Employee, id=pk)
     person = Person.objects.get(id=employee.person.id)
     # Check if it's CEO page.
-    if not isUserAllowedToModify(request.user, employee.position, "CEO"): 
+    if not isUserAllowedToModify(request.user, employee.position, "CEO"):
         return redirect("Unauthorized")
     # Setting up the forms
     position_form = EmployeePositionForm(instance=employee)
@@ -106,10 +121,8 @@ def UpdateEmployeePage(request, pk):
         if person_form.is_valid() and position_form.is_valid():
             # Update data
             person_form.save()
-            position = position_form['position'].value()
-            employee.account.groups.clear()  # delete the employee group
-            # assigning the employee with the new position
-            Group.objects.get(name=position).user_set.add(employee.account)
+            employee.position = position_form['position'].value()
+            employee.save()
             alerts.employee_data_updated(request)
 
             if request.user.groups.all()[0].name == "CEO":
@@ -127,7 +140,7 @@ def DeleteEmployeePage(request, pk):
     # Getting the employee object from database if exists or 404
     employee = get_object_or_404(Employee, id=pk)
     # Check if it is a post method# Check if it's CEO page.
-    if not isUserAllowedToModify(request.user, employee.position, "CEO"): 
+    if not isUserAllowedToModify(request.user, employee.position, "CEO"):
         return redirect("Unauthorized")
     if request.method == "POST":
         # Delete the employee
@@ -248,10 +261,7 @@ def DeleteDistributorPage(request, pk):
 # ------------------------------Tasks------------------------------ #
 def TasksPage(request):
     # Getting all tasks data from database
-    if request.user.groups.all()[0].name == "Human Resources":
-        Tasks = Task.objects.filter(~Q(employee__position="Human Resources"))
-    else:
-        Tasks = Task.objects.all()
+    Tasks = Task.objects.all()
 
     context = {'Tasks': Tasks, 'base': base(request),
                'getEmployeesTasks': getEmployeesTasks(request)}
@@ -260,11 +270,13 @@ def TasksPage(request):
 
 
 def AddTaskPage(request):
+    # Get the requester position
+    requester_position = request.user.groups.all()[0].name
     # Setting up the form
-    form = AddTaskForm()
+    form = AddTaskForm(requester_position)
     # Check if it is a post method
     if request.method == "POST":
-        form = AddTaskForm(request.POST)
+        form = AddTaskForm(requester_position, request.POST)
         # If the form is valid
         if form.is_valid():
             # Add new task
@@ -283,10 +295,10 @@ def AddTaskPage(request):
 
 
 def TaskPage(request, pk):
-    # Fetch the task's data from database if exists or 404 
+    # Fetch the task's data from database if exists or 404
     task = get_object_or_404(Task, id=pk)
     # Check if the user allowed to view the task page
-    if not isUserAllowedToModify(request.user, task.employee.position, "Human Resources"): 
+    if not isUserAllowedToModify(request.user, task.employee.position, "Human Resources"):
         return redirect("Unauthorized")
     # Get the task rate if it exist, else set it to None
     try:
@@ -304,13 +316,13 @@ def UpdateTaskPage(request, pk):
     # Fetch the task's data from database if exists or 404
     task = get_object_or_404(Task, id=pk)
     # Check if the user allowed to view the task page
-    if not isUserAllowedToModify(request.user, task.employee.position, "Human Resources"): 
+    if not isUserAllowedToModify(request.user, task.employee.position, "Human Resources"):
         return redirect("Unauthorized")
     # Setting up the form
-    form = AddTaskForm(instance=task)
+    form = AddTaskForm(request, instance=task)
     # Check if it is a post method
     if request.method == 'POST':
-        form = AddTaskForm(request.POST, instance=task)
+        form = AddTaskForm(request, request.POST, instance=task)
         # If the form is valid
         if form.is_valid():
             # Update
@@ -332,7 +344,7 @@ def DeleteTaskPage(request, pk):
     # Fetch the task's data from database if exists or 404
     task = get_object_or_404(Task, id=pk)
     # Check if the user allowed to view the task page
-    if not isUserAllowedToModify(request.user, task.employee.position, "Human Resources"): 
+    if not isUserAllowedToModify(request.user, task.employee.position, "Human Resources"):
         return redirect("Unauthorized")
     # Check if it is a post method
     if request.method == "POST":
@@ -403,14 +415,18 @@ def WeeklyEvaluationPage(request):
             weeks[0].is_rated = True
             weeks[0].save()
 
-            # change the last weekly evaluations task state
-            task = Task.objects.get(name="Evaluate employees", is_rated=False)
-            task.status = "On-Time"
-            task.submission_date = timezone.now()
-            task.is_rated = True
-            task.save()
-            # Rate the task automatically
-            TaskRate.objects.create(task=task, on_time_rate=5, rate=5)
+            try:
+                # change the last weekly evaluations task state
+                task = Task.objects.get(
+                    name="Evaluate employees", is_rated=False)
+                task.status = "On-Time"
+                task.submission_date = timezone.now()
+                task.is_rated = True
+                task.save()
+                # Rate the task automatically
+                TaskRate.objects.create(task=task, on_time_rate=5, rate=5)
+            except Task.DoesNotExist:
+                pass
 
             if request.user.groups.all()[0].name == "CEO":
                 return redirect('EvaluationPage-CEO')

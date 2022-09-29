@@ -1,7 +1,8 @@
+from django.db.models import Q
 from .models import Employee, Task, TaskRate, Week, WeeklyRate
 
 
-def newEmployee(emp_id:int) -> bool:
+def newEmployee(emp_id: int) -> bool:
     """
     This function checks if the Employee is new 
     by checking if there is any weekly rate existed
@@ -18,7 +19,7 @@ def newEmployee(emp_id:int) -> bool:
     return False
 
 
-def monthlyRate(emp_id:int) -> float:
+def monthlyRate(emp_id: int) -> float:
     """
     This function will return the monthly rate of the employee 
     by calculating the last 4 weeks' rates, 
@@ -32,7 +33,8 @@ def monthlyRate(emp_id:int) -> float:
     """
     if not newEmployee(emp_id):
         rate, count = 0, 0
-        emp_weekly_rates = WeeklyRate.objects.filter(employee=emp_id).order_by('-id')
+        emp_weekly_rates = WeeklyRate.objects.filter(
+            employee=emp_id).order_by('-id')
         for i in emp_weekly_rates:
             if count == 4:
                 break
@@ -44,7 +46,7 @@ def monthlyRate(emp_id:int) -> float:
     return 0
 
 
-def monthlyTaskRate(emp_id:int) -> float:
+def monthlyTaskRate(emp_id: int) -> float:
     """
     This function will return the monthly task rate of the employee 
     by calculating the last 4 weeks' task rates, 
@@ -59,12 +61,12 @@ def monthlyTaskRate(emp_id:int) -> float:
     if not newEmployee(emp_id):
         from django.utils import timezone
         from datetime import timedelta
-        
+
         rate, count = 0, 0
         today = timezone.now()
         end_date = today - timedelta(days=30)
-        empTasks = Task.objects.filter(employee=emp_id, 
-                                        receiving_date__range=[end_date, today]) 
+        empTasks = Task.objects.filter(employee=emp_id,
+                                       receiving_date__range=[end_date, today])
         if empTasks.exists():
             for task in empTasks:
                 task_rate = TaskRate.objects.filter(task=task)
@@ -73,13 +75,13 @@ def monthlyTaskRate(emp_id:int) -> float:
                     rate += task_rate.rate
                     rate += task_rate.on_time_rate
                     count += 1
-            if count != 0: 
-                return round(((rate/count) /2), 2)
-                
+            if count != 0:
+                return round(((rate/count) / 2), 2)
+
     return 0
 
 
-def weeklyRate(week_id:int, emp_id:int) -> float:
+def weeklyRate(week_id: int, emp_id: int) -> float:
     """
     This function will return the last week rate of the employee 
     if the employee has not been weekly rated ever the function will return 0
@@ -98,7 +100,7 @@ def weeklyRate(week_id:int, emp_id:int) -> float:
     return 0
 
 
-def monthlyOverallEvaluation(emp_id:int) -> float:
+def monthlyOverallEvaluation(emp_id: int) -> float:
     """
     This function calculating the monthly overall evaluation
 
@@ -114,7 +116,7 @@ def monthlyOverallEvaluation(emp_id:int) -> float:
     return 0
 
 
-def allTimeEvaluation(emp_id:int) -> float:
+def allTimeEvaluation(emp_id: int) -> float:
     """
     This function calculating all time evaluation for the employee
     Args:
@@ -138,14 +140,14 @@ def allTimeEvaluation(emp_id:int) -> float:
         rate, count = 0, 0
         empTasks = Task.objects.filter(employee=emp_id)
         if empTasks.exists():
-            for task in empTasks: 
+            for task in empTasks:
                 task_rate = TaskRate.objects.filter(task=task)
                 if task_rate.exists():
                     task_rate = task_rate[0]
                     rate += task_rate.rate
                     rate += task_rate.on_time_rate
                     count += 1
-        all_task_rate = 0 if count == 0 else (rate/count) /2
+        all_task_rate = 0 if count == 0 else (rate/count) / 2
         return round(((all_time_weekly_rate + all_task_rate) / 2), 2)
 
     return 0
@@ -163,24 +165,79 @@ def getEvaluation(emp_id=-1) -> dict:
         dict: Employee/s evaluation
     """
     evaluation = {}
-    if emp_id != -1: # if the employee specified
+    if emp_id != -1:  # if the employee specified
         employee = Employee.objects.get(id=emp_id)
-        evaluation = {'Employee':employee, 
-                        'MonthlyRate':monthlyRate(emp_id),
-                        'WeeklyRate':weeklyRate(Week.getLastWeekID(), emp_id),
-                        'MonthlyTaskRate':monthlyTaskRate(emp_id),
-                        'MonthlyOverallEvaluation':monthlyOverallEvaluation(emp_id),
-                        'AllTimeEvaluation':allTimeEvaluation(emp_id),
-                        }
+        evaluation = {'Employee': employee,
+                      'MonthlyRate': monthlyRate(emp_id),
+                      'WeeklyRate': weeklyRate(Week.getLastWeekID(), emp_id),
+                      'MonthlyTaskRate': monthlyTaskRate(emp_id),
+                      'MonthlyOverallEvaluation': monthlyOverallEvaluation(emp_id),
+                      'AllTimeEvaluation': allTimeEvaluation(emp_id),
+                      }
     else:
         for employee in Employee.objects.all():
             emp_id = employee.id
-            evaluation[employee.person.name] = {'Employee':employee, 
-                                                'MonthlyRate':monthlyRate(emp_id),
-                                                'WeeklyRate':weeklyRate(Week.getLastWeekID(), emp_id),
-                                                'MonthlyTaskRate':monthlyTaskRate(emp_id),
-                                                'MonthlyOverallEvaluation':monthlyOverallEvaluation(emp_id),
-                                                'AllTimeEvaluation':allTimeEvaluation(emp_id)
+            evaluation[employee.person.name] = {'Employee': employee,
+                                                'MonthlyRate': monthlyRate(emp_id),
+                                                'WeeklyRate': weeklyRate(Week.getLastWeekID(), emp_id),
+                                                'MonthlyTaskRate': monthlyTaskRate(emp_id),
+                                                'MonthlyOverallEvaluation': monthlyOverallEvaluation(emp_id),
+                                                'AllTimeEvaluation': allTimeEvaluation(emp_id)
                                                 }
 
     return evaluation
+
+
+def allEmployeesWeeklyEvaluations():
+    rate, count = 0, 0
+    employees = Employee.objects.filter(~Q(position="CEO"))
+    for employee in employees:
+        emp_weekly_rate = weeklyRate(Week.getLastWeekID(), employee.id)
+        if emp_weekly_rate:
+            rate += emp_weekly_rate
+            count += 1
+    try:
+        return rate/count
+    except ZeroDivisionError:
+        return 0
+
+def allEmployeesMonthlyEvaluations():
+    rate, count = 0, 0
+    employees = Employee.objects.filter(~Q(position="CEO"))
+    for employee in employees:
+        emp_monthly_rate = monthlyRate(employee.id)
+        if emp_monthly_rate:
+            rate += emp_monthly_rate
+            count += 1
+    try:
+        return rate/count
+    except ZeroDivisionError:
+        return 0
+
+
+def allEmployeesMonthlyTaskRate():
+    rate, count = 0, 0
+    employees = Employee.objects.filter(~Q(position="CEO"))
+    for employee in employees:
+        emp_monthly_rate = monthlyTaskRate(employee.id)
+        if emp_monthly_rate:
+            rate += emp_monthly_rate
+            count += 1
+    try:
+        return rate/count
+    except ZeroDivisionError:
+        return 0
+
+
+def allEmployeesMonthlyOverallEvaluation():
+    rate, count = 0, 0
+    employees = Employee.objects.filter(~Q(position="CEO"))
+    for employee in employees:
+        emp_monthly_rate = monthlyOverallEvaluation(employee.id)
+        if emp_monthly_rate:
+            rate += emp_monthly_rate
+            count += 1
+    try:
+        return rate/count
+    except ZeroDivisionError:
+        return 0

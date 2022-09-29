@@ -123,7 +123,7 @@
     <div class="col-md-3">
       <div class="card-counter primary">
         <i class="fa fa-history"></i>
-        <span class="count-numbers">4</span>
+        <span class="count-numbers">{{ in_progress }}</span>
         <span class="count-name">In-Progress Tasks</span>
       </div>
     </div>
@@ -131,15 +131,15 @@
     <div class="col-md-3">
       <div class="card-counter danger">
         <i class="fa fa-tasks"></i>
-        <span class="count-numbers">4</span>
-        <span class="count-name">Unsubmited Tasks</span>
+        <span class="count-numbers">{{ unsubmitted }}</span>
+        <span class="count-name">Unsubmitted Tasks</span>
       </div>
     </div>
 
     <div class="col-md-3">
       <div class="card-counter success">
         <i class="fa fa-truck"></i>
-        <span class="count-numbers">8</span>
+        <span class="count-numbers">{{ distributors }}</span>
         <span class="count-name">Distributors</span>
       </div>
     </div>
@@ -147,7 +147,7 @@
     <div class="col-md-3">
       <div class="card-counter info">
         <i class="fa fa-users"></i>
-        <span class="count-numbers">6</span>
+        <span class="count-numbers">{{ employees }}</span>
         <span class="count-name">Employees</span>
       </div>
     </div>
@@ -950,7 +950,7 @@
                 <div class="row">
                   <div class="col">
                     <h5 class="card-title text-uppercase text-muted mb-0">Employees weekly performance</h5>
-                    <span class="h2 font-weight-bold mb-0">5/5</span>
+                    <span class="h2 font-weight-bold mb-0">{{ employees_weekly_rate }}/5.0</span>
                   </div>
                   <div class="col-auto">
                     <!--
@@ -973,7 +973,7 @@
                 <div class="row">
                   <div class="col">
                     <h5 class="card-title text-uppercase text-muted mb-0">Employees monthly performance</h5>
-                    <span class="h2 font-weight-bold mb-0">5/5</span>
+                    <span class="h2 font-weight-bold mb-0">{{ employees_monthly_rate }}/5.0</span>
                   </div>
                   <div class="col-auto">
                     <!--
@@ -995,8 +995,8 @@
               <div class="card-body">
                 <div class="row">
                   <div class="col">
-                    <h5 class="card-title text-uppercase text-muted mb-0">Employees weekly Task Rate</h5>
-                    <span class="h2 font-weight-bold mb-0">5/5</span>
+                    <h5 class="card-title text-uppercase text-muted mb-0">Employees Monthley Task Rate</h5>
+                    <span class="h2 font-weight-bold mb-0">{{ allEmployeesMonthlyTaskRate }}/5.0</span>
                   </div>
                   <div class="col-auto">
                     <!--
@@ -1018,8 +1018,8 @@
               <div class="card-body">
                 <div class="row">
                   <div class="col">
-                    <h5 class="card-title text-uppercase text-muted mb-0">Employees monthly Task Rate</h5>
-                    <span class="h2 font-weight-bold mb-0">5/5</span>
+                    <h5 class="card-title text-uppercase text-muted mb-0">Employees monthly overall performance</h5>
+                    <span class="h2 font-weight-bold mb-0">{{ employees_monthly_rate_overall_performance }}/5.0</span>
                   </div>
                   <div class="col-auto">
                     <!--

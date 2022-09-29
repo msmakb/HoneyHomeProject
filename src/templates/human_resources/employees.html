@@ -2,11 +2,9 @@
 {% block title %}Dashboard{% endblock %}
 {% block content %}
 {% load hr_tags %}
-{% include 'alerts.html' %}
 
 <div style="float: right;">
-    <td><a id="button" class="btn btn-xs btn-info" 
-        href="{% if user.groups.all.0.name == "CEO" %}
+    <td><a id="button" class="btn btn-xs btn-info" href="{% if user.groups.all.0.name == "CEO" %}
               {% url 'AddEmployeePage-CEO' %}
               {% else %}
               {% url 'AddEmployeePage' %}
@@ -35,25 +33,19 @@
             <td>{{ employee.person.nationality }}</td>
             <td>{% if employee.position == "CEO" %} - {% else %}{% getAllTimeEvaluation employee.id %}{% endif %}</td>
             <td>
-                {% for g in request.user.groups.all %}
-                    {% if employee.position == "CEO" and g.name == "CEO" %}
-                        <a class="btn btn-sm btn-info" 
-                        href="{% if user.groups.all.0.name == "CEO" %}
-                              {% url 'EmployeePage-CEO' employee.id %}
-                              {% else %}
-                              {% url 'EmployeePage' employee.id %}
-                              {% endif %}">View</a>
-                    {% elif employee.position == "CEO" and g.name != "CEO" %}
-                        <a class="btn btn-sm btn-secondary" style="pointer-events: none;">View</a>
+                {% if employee.position == "CEO" %}
+                    {% if request.user.groups.all.0.name == "CEO" %}
+                    <a class="btn btn-sm btn-info" href="{% url 'EmployeePage-CEO' employee.id %}">View</a>
                     {% else %}
-                        <a class="btn btn-sm btn-info" 
-                        href="{% if user.groups.all.0.name == "CEO" %}
-                              {% url 'EmployeePage-CEO' employee.id %}
-                              {% else %}
-                              {% url 'EmployeePage' employee.id %}
-                              {% endif %}">View</a>
+                    <a class="btn btn-sm btn-secondary" style="pointer-events: none;">View</a>
                     {% endif %}
-                {% endfor %}
+                {% else %}
+                    {% if request.user.groups.all.0.name == "CEO" %}
+                    <a class="btn btn-sm btn-info" href="{% url 'EmployeePage-CEO' employee.id %}">View</a>
+                    {% else %}
+                    <a class="btn btn-sm btn-info" href="{% url 'EmployeePage' employee.id %}">View</a>
+                    {% endif %}
+                {% endif %}
             </td>
         </tr>
         {% endfor %}

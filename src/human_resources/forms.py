@@ -174,6 +174,31 @@ class EmployeePositionForm(ModelForm):
 
 class AddTaskForm(ModelForm):
 
+    def __init__(self, requester_position, *args, **kwargs):
+        super(AddTaskForm, self).__init__(*args, **kwargs)
+
+        CHOICES = list(self.fields['employee'].choices)
+
+        choices_to_remove = []
+
+        for choice in CHOICES:
+            if not choice[0]:
+                continue
+            else:
+                employee_position = Employee.objects.get(
+                    person__name=choice[1]).position
+            if employee_position == "CEO":
+                choices_to_remove.append(choice)
+            if employee_position == "Human Resources":
+                if requester_position == "Human Resources":
+                    choices_to_remove.append(choice)
+
+        for choice in choices_to_remove:
+            CHOICES.remove(choice)
+
+        self.fields['employee'].choices = CHOICES
+        self.fields['employee'].widget.choices = CHOICES
+
     class Meta:
         model = Task
         fields = [
