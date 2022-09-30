@@ -2,6 +2,7 @@
 {% block title %}Dashboard{% endblock %}
 {% block content %}
 {% load hr_tags %}
+{% include 'alerts.html' %}
 
 <div style="float: right;">
     <td><a id="button" class="btn btn-xs btn-info" href="{% if user.groups.all.0.name == "CEO" %}

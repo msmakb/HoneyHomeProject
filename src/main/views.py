@@ -2,11 +2,13 @@ from django.shortcuts import redirect, render
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.db.models import Q
 from datetime import timedelta
 
 from human_resources.models import Employee, Task
 from .decorators import isAuthenticatedUser
+from .forms import CreateUserForm
 from .tasks import getEmployeesTasks
 from .utils import getUserBaseTemplate as base
 
@@ -48,6 +50,32 @@ def logoutUser(request):
     return redirect('Index')
 
 
+def createUserPage(request):
+    form = CreateUserForm()
+    if request.method == 'POST':
+        form = CreateUserForm(request.POST)
+        if form.is_valid():
+            form.save()
+
+            old_user = request.user
+            new_user = User.objects.all().order_by('-id')[0]
+            employee = Employee.objects.get(account=old_user)
+
+            employee.account = new_user
+            employee.save()
+
+            logout(request)
+            old_user.delete()
+
+            messages.info(request, "Please sing in with your new account")
+
+            return redirect('Index')
+    
+    template = 'create_user.html'
+    context = {'form':form}
+    return render(request, template, context)
+
+
 def tasks(request):
     Tasks = Task.objects.filter(~Q(status="Late-Submission") & ~Q(
         status="On-Time"), employee__account=request.user)
@@ -72,7 +100,7 @@ def tasks(request):
 
         task.submission_date = timezone.now()
         task.save()
-        
+
         if request.user.groups.all()[0].name != "Human Resources":
             emp = Employee.objects.get(position='Human Resources')
             Task.objects.create(
