@@ -1,5 +1,3 @@
-from turtle import position
-from django.contrib.auth.models import Group
 from django.db.models import Q
 from django.shortcuts import redirect, render, get_object_or_404
 from django.utils import timezone
@@ -7,27 +5,31 @@ from django.utils import timezone
 from distributor.models import Distributor
 from main.decorators import allowed_users
 from main.models import Person
-from main.tasks import getEmployeesTasks
+from main.utils import getEmployeesTasks as EmployeeTasks
 from main.utils import getUserBaseTemplate as base
 
 from . import alerts
-from .evaluation import getEvaluation, allEmployeesWeeklyEvaluations, allEmployeesMonthlyEvaluations, allEmployeesMonthlyTaskRate, allEmployeesMonthlyOverallEvaluation
+from .evaluation import (getEvaluation, allEmployeesWeeklyEvaluations, allEmployeesMonthlyEvaluations,
+                         allEmployeesMonthlyTaskRate, allEmployeesMonthlyOverallEvaluation)
 from .forms import AddPersonForm, EmployeePositionForm, AddTaskForm
 from .models import Employee, Task, TaskRate, Week, WeeklyRate
-from .utils import isUserAllowedToModify
+from .utils import isUserAllowedToModify, isRequesterCEO
 
 
 # ------------------------------Dashboard------------------------------ #
 @allowed_users(['Human Resources'])
 def humanResourcesDashboard(request):
+    # Count in-progress Tasks
     in_progress = Task.objects.filter(status='In-Progress').count()
+    # Count unsubmitted Tasks
     unsubmitted = Task.objects.filter(
         Q(status="In-Progress") | Q(status="Overdue")).count()
+    # Count employees
     employees = Employee.objects.all().count()
+    # Count distributors
     distributors = Distributor.objects.all().count()
-    print()
 
-    context = {'getEmployeesTasks': getEmployeesTasks(request),
+    context = {'EmployeeTasks': EmployeeTasks(request),
                'in_progress': in_progress,
                'unsubmitted': unsubmitted,
                'employees': employees,
@@ -47,7 +49,7 @@ def EmployeesPage(request):
     Employees = Employee.objects.all()
 
     context = {'Employees': Employees, 'base': base(request),
-               'getEmployeesTasks': getEmployeesTasks(request)}
+               'EmployeeTasks': EmployeeTasks(request)}
     template = 'human_resources/employees.html'
     return render(request, template, context)
 
@@ -70,13 +72,13 @@ def AddEmployeePage(request):
             Employee.objects.create(position=position)
             alerts.employee_added(request)
 
-            if request.user.groups.all()[0].name == "CEO":
+            if isRequesterCEO(request):
                 return redirect('EmployeesPage-CEO')
             else:
                 return redirect('EmployeesPage')
 
     context = {'PersonForm': person_form, 'position_form': position_form,
-               'base': base(request), 'getEmployeesTasks': getEmployeesTasks(request)}
+               'base': base(request), 'EmployeeTasks': EmployeeTasks(request)}
     template = 'human_resources/add_employee.html'
     return render(request, template, context)
 
@@ -99,7 +101,7 @@ def EmployeePage(request, pk):
         alerts.employee_photo_updated(request)
 
     context = {'Employee': employee, 'Evaluation': evaluation,
-               'base': base(request), 'getEmployeesTasks': getEmployeesTasks(request)}
+               'base': base(request), 'EmployeeTasks': EmployeeTasks(request)}
     return render(request, 'human_resources/employee.html', context)
 
 
@@ -125,13 +127,13 @@ def UpdateEmployeePage(request, pk):
             employee.save()
             alerts.employee_data_updated(request)
 
-            if request.user.groups.all()[0].name == "CEO":
+            if isRequesterCEO(request):
                 return redirect('EmployeePage-CEO', pk)
             else:
                 return redirect('EmployeePage', pk)
 
     context = {'PersonForm': person_form, 'position_form': position_form, 'Employee': employee,
-               'base': base(request), 'getEmployeesTasks': getEmployeesTasks(request)}
+               'base': base(request), 'EmployeeTasks': EmployeeTasks(request)}
     template = 'human_resources/update_employee.html'
     return render(request, template, context)
 
@@ -147,13 +149,13 @@ def DeleteEmployeePage(request, pk):
         employee.delete()
         alerts.employee_removed(request)
 
-        if request.user.groups.all()[0].name == "CEO":
+        if isRequesterCEO(request):
             return redirect('EmployeesPage-CEO')
         else:
             return redirect('EmployeesPage')
 
     context = {'Employee': employee, 'base': base(request),
-               'getEmployeesTasks': getEmployeesTasks(request)}
+               'EmployeeTasks': EmployeeTasks(request)}
     template = 'human_resources/delete_employee.html'
     return render(request, template, context)
 
@@ -164,7 +166,7 @@ def DistributorsPage(request):
     Distributors = Distributor.objects.all()
 
     context = {'Distributors': Distributors, 'base': base(request),
-               'getEmployeesTasks': getEmployeesTasks(request)}
+               'EmployeeTasks': EmployeeTasks(request)}
     template = 'human_resources/distributors.html'
     return render(request, template, context)
 
@@ -183,13 +185,13 @@ def AddDistributorPage(request):
             Distributor.objects.create()
             alerts.distributor_added(request)
 
-            if request.user.groups.all()[0].name == "CEO":
+            if isRequesterCEO(request):
                 return redirect('DistributorsPage-CEO')
             else:
                 return redirect('DistributorsPage')
 
     context = {'PersonForm': person_form, 'base': base(request),
-               'getEmployeesTasks': getEmployeesTasks(request)}
+               'EmployeeTasks': EmployeeTasks(request)}
     template = 'human_resources/add_distributor.html'
     return render(request, template, context)
 
@@ -208,7 +210,7 @@ def DistributorPage(request, pk):
         alerts.distributor_photo_updated(request)
 
     context = {'Distributor': distributor, 'base': base(request),
-               'getEmployeesTasks': getEmployeesTasks(request)}
+               'EmployeeTasks': EmployeeTasks(request)}
     return render(request, 'human_resources/distributor.html', context)
 
 
@@ -227,13 +229,13 @@ def UpdateDistributorPage(request, pk):
             person_form.save()
             alerts.distributor_data_updated(request)
 
-            if request.user.groups.all()[0].name == "CEO":
+            if isRequesterCEO(request):
                 return redirect('DistributorPage-CEO', pk)
             else:
                 return redirect('DistributorPage', pk)
 
     context = {'PersonForm': person_form, 'Distributor': distributor,
-               'base': base(request), 'getEmployeesTasks': getEmployeesTasks(request)}
+               'base': base(request), 'EmployeeTasks': EmployeeTasks(request)}
     template = 'human_resources/update_distributor.html'
     return render(request, template, context)
 
@@ -247,13 +249,13 @@ def DeleteDistributorPage(request, pk):
         distributor.delete()
         alerts.distributor_removed(request)
 
-        if request.user.groups.all()[0].name == "CEO":
+        if isRequesterCEO(request):
             return redirect('DistributorsPage-CEO')
         else:
             return redirect('DistributorsPage')
 
     context = {'Distributor': distributor, 'base': base(request),
-               'getEmployeesTasks': getEmployeesTasks(request)}
+               'EmployeeTasks': EmployeeTasks(request)}
     template = 'human_resources/delete_distributor.html'
     return render(request, template, context)
 
@@ -264,7 +266,7 @@ def TasksPage(request):
     Tasks = Task.objects.all()
 
     context = {'Tasks': Tasks, 'base': base(request),
-               'getEmployeesTasks': getEmployeesTasks(request)}
+               'EmployeeTasks': EmployeeTasks(request)}
     template = 'human_resources/tasks.html'
     return render(request, template, context)
 
@@ -283,13 +285,13 @@ def AddTaskPage(request):
             form.save()
             alerts.Task_added(request)
 
-            if request.user.groups.all()[0].name == "CEO":
+            if isRequesterCEO(request):
                 return redirect('TasksPage-CEO')
             else:
                 return redirect('TasksPage')
 
     context = {'form': form, 'base': base(request),
-               'getEmployeesTasks': getEmployeesTasks(request)}
+               'EmployeeTasks': EmployeeTasks(request)}
     template = 'human_resources/add_task.html'
     return render(request, template, context)
 
@@ -307,7 +309,7 @@ def TaskPage(request, pk):
         task_rate = None
 
     context = {'Task': task, 'TaskRate': task_rate, 'base': base(request),
-               'getEmployeesTasks': getEmployeesTasks(request)}
+               'EmployeeTasks': EmployeeTasks(request)}
     template = 'human_resources/task.html'
     return render(request, template, context)
 
@@ -329,13 +331,13 @@ def UpdateTaskPage(request, pk):
             form.save()
             alerts.Task_data_updated(request)
 
-            if request.user.groups.all()[0].name == "CEO":
+            if isRequesterCEO(request):
                 return redirect('TaskPage-CEO', pk)
             else:
                 return redirect('TaskPage', pk)
 
     context = {'form': form, 'TaskID': task.id, 'base': base(request),
-               'getEmployeesTasks': getEmployeesTasks(request)}
+               'EmployeeTasks': EmployeeTasks(request)}
     template = 'human_resources/update_task.html'
     return render(request, template, context)
 
@@ -352,13 +354,13 @@ def DeleteTaskPage(request, pk):
         task.delete()
         alerts.Task_removed(request)
 
-        if request.user.groups.all()[0].name == "CEO":
+        if isRequesterCEO(request):
             return redirect('TasksPage-CEO')
         else:
             return redirect('TasksPage')
 
     context = {'Task': task, 'base': base(request),
-               'getEmployeesTasks': getEmployeesTasks(request)}
+               'EmployeeTasks': EmployeeTasks(request)}
     template = 'human_resources/delete_Task.html'
     return render(request, template, context)
 
@@ -369,7 +371,7 @@ def EvaluationPage(request):
     evaluation = getEvaluation()
 
     context = {'Evaluation': evaluation, 'base': base(request),
-               'getEmployeesTasks': getEmployeesTasks(request)}
+               'EmployeeTasks': EmployeeTasks(request)}
     template = 'human_resources/evaluation.html'
     return render(request, template, context)
 
@@ -379,7 +381,7 @@ def WeeklyEvaluationPage(request):
     weeks = Week.objects.filter(is_rated=False)
 
     context = {'week_to_rate_exists': True, 'base': base(
-        request), 'getEmployeesTasks': getEmployeesTasks(request)}
+        request), 'EmployeeTasks': EmployeeTasks(request)}
     # if there is no unrated weeks, just send a success message
     if not weeks.exists():
         alerts.evaluation_done(request)
@@ -428,7 +430,7 @@ def WeeklyEvaluationPage(request):
             except Task.DoesNotExist:
                 pass
 
-            if request.user.groups.all()[0].name == "CEO":
+            if isRequesterCEO(request):
                 return redirect('EvaluationPage-CEO')
             else:
                 return redirect('EvaluationPage')
@@ -487,6 +489,6 @@ def TaskEvaluationPage(request):
         alerts.no_tasks_to_rate(request)
 
     context = {'Tasks': Tasks,  'base': base(request),
-               'getEmployeesTasks': getEmployeesTasks(request)}
+               'EmployeeTasks': EmployeeTasks(request)}
     template = 'human_resources/task_evaluation.html'
     return render(request, template, context)

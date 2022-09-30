@@ -11,9 +11,9 @@ class HumanResourcesConfig(AppConfig):
         from distributor.models import Distributor
         from .models import Employee, Task
 
-        # After creating new employee/distributor
-        post_save.connect(signals.onAddingNewEmployee, sender=Employee)
-        post_save.connect(signals.onAddingNewDistributor, sender=Distributor)
+        # After creating new employee/distributor or update
+        post_save.connect(signals.onAddingUpdatingEmployee, sender=Employee)
+        post_save.connect(signals.onAddingUpdatingDistributor, sender=Distributor)
         
         # Before deleting employee/distributor or task
         pre_delete.connect(signals.deleteUserAccount, sender=Employee)

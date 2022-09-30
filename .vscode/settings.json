@@ -1,8 +1,14 @@
 {
+   "python.terminal.activateEnvInCurrentTerminal": true,
+   "python.defaultInterpreterPath":"/home/msmab/Documents/Git/HoneyHomeProject/bin/python",
+   "editor.formatOnSave": true,
+   "python.formatting.provider": "autopep8",
+   "python.linting.enabled":true,
+   "python.linting.lintOnSave": true,
+   "git.ignoreLimitWarning": true,
    "emmet.includeLanguages": {
       "django-html": "html"
    },
-   
    "beautify.language": {
       "html": [
          "htm",
@@ -10,23 +16,12 @@
          "django-html"
       ]
    },
-   
-   "python.terminal.activateEnvInCurrentTerminal": true,
-   "python.defaultInterpreterPath":"/home/msmab/Documents/Git/HoneyHomeProject/bin/python",
-   "editor.formatOnSave": true,
-   "python.formatting.provider": "autopep8",
-   "python.linting.enabled":true,
-   "python.linting.lintOnSave": true,
-
    "files.associations": {
       "**/*.html": "html",
       "**/templates/*/*.html": "django-html",
       "**/templates/*": "django-txt",
       "**/requirements{/**,*}.{txt,in}": "pip-requirements"
    },
-
-
-   "git.ignoreLimitWarning": true,
    "cSpell.words": [
       "unsubmitted"
    ],

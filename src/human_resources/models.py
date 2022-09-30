@@ -16,10 +16,10 @@ class Employee(models.Model):
     ]
 
     id = models.AutoField(primary_key=True)
-    person = models.OneToOneField(
-        Person, on_delete=models.SET_NULL, null=True, blank=True)
-    account = models.OneToOneField(
-        User, on_delete=models.SET_NULL, null=True, blank=True)
+    person = models.OneToOneField(Person, on_delete=models.SET_NULL,
+                                  null=True, blank=True)
+    account = models.OneToOneField(User, on_delete=models.SET_NULL,
+                                   null=True, blank=True)
     position = models.CharField(max_length=20, choices=POSITIONS)
 
     def __str__(self) -> str:
@@ -36,12 +36,13 @@ class Task(models.Model):
     ]
 
     id = models.AutoField(primary_key=True)
-    employee = models.ForeignKey(
-        Employee, on_delete=models.SET_NULL, null=True, blank=True)
+    employee = models.ForeignKey(Employee, on_delete=models.SET_NULL,
+                                 null=True, blank=True)
     name = models.CharField(max_length=20)
-    description = models.TextField(max_length=500, default="-", null=True, blank=True)
-    status = models.CharField(
-        max_length=20, choices=STATUS, null=True, blank=True, default='In-Progress')
+    description = models.TextField(max_length=500, default="-",
+                                   null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS, null=True,
+                              blank=True, default='In-Progress')
     receiving_date = models.DateTimeField(auto_now_add=True)
     deadline_date = models.DateTimeField(null=True, blank=True)
     submission_date = models.DateTimeField(null=True, blank=True)
@@ -50,19 +51,26 @@ class Task(models.Model):
     def __str__(self) -> str:
         return self.name
 
+    @property
     def getTimeLeft(self) -> str:
-        from datetime import datetime
+        """
+        Calculating the time difference between the time now and the task's deadline.
+
+        Returns:
+            str: The time left from the task deadline.
+        """
         from django.utils import timezone
 
+        # If the deadline date is declared
         if self.deadline_date:
-            date, time = str(self.deadline_date.date()).split('-'), str(self.deadline_date.time()).split(':')
-            date = datetime(int(date[0]), int(date[1]), int(date[2]), int(time[0]), int(time[1]), int(time[2][:2]), 00000)
-            diff = date - timezone.now()
-            if str(diff)[0] == '-':
+            time_difference = str(self.deadline_date - timezone.now())[:-7]
+            # Check if the time difference is a negative value
+            if time_difference[0] == '-':
                 return 'Overdue'
             else:
-                return str(diff)[:-7]
-        else: return "Open"
+                return time_difference
+        else:
+            return "Open"
 
 
 class TaskRate(models.Model):
@@ -104,8 +112,8 @@ class WeeklyRate(models.Model):
 
     id = models.AutoField(primary_key=True)
     week = models.ForeignKey(Week, on_delete=models.CASCADE)
-    employee = models.ForeignKey(
-        Employee, on_delete=models.SET_NULL, null=True, blank=True)
+    employee = models.ForeignKey(Employee, on_delete=models.SET_NULL,
+                                 null=True, blank=True)
     rate = models.FloatField()
 
     def __str__(self) -> str:

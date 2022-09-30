@@ -33,14 +33,17 @@ def monthlyRate(emp_id: int) -> float:
     """
     if not newEmployee(emp_id):
         rate, count = 0, 0
+        # Get all weekly rates of the employee 
         emp_weekly_rates = WeeklyRate.objects.filter(
             employee=emp_id).order_by('-id')
         for i in emp_weekly_rates:
+            # Check if 4 weeks already calculated then break if it is.
             if count == 4:
                 break
             rate += i.rate
             count += 1
 
+        # Check to avoid ZeroDivisionError
         return 0 if count == 0 else round((rate/count), 2)
 
     return 0
@@ -64,17 +67,21 @@ def monthlyTaskRate(emp_id: int) -> float:
 
         rate, count = 0, 0
         today = timezone.now()
+        # The date of the day before 30 days form today
         end_date = today - timedelta(days=30)
+        # Get all employee's tasks last 30 days 
         empTasks = Task.objects.filter(employee=emp_id,
                                        receiving_date__range=[end_date, today])
         if empTasks.exists():
             for task in empTasks:
+                # Get the task rate of the task
                 task_rate = TaskRate.objects.filter(task=task)
                 if task_rate.exists():
                     task_rate = task_rate[0]
                     rate += task_rate.rate
                     rate += task_rate.on_time_rate
                     count += 1
+            # Check to avoid ZeroDivisionError
             if count != 0:
                 return round(((rate/count) / 2), 2)
 
@@ -94,6 +101,7 @@ def weeklyRate(week_id: int, emp_id: int) -> float:
         float: Employee weekly rate
     """
     if not newEmployee(emp_id):
+        # Check if there is a last week rate for the employee
         if week_id != -1:
             return WeeklyRate.objects.get(week__id=week_id, employee=emp_id).rate
 
@@ -128,11 +136,13 @@ def allTimeEvaluation(emp_id: int) -> float:
     if not newEmployee(emp_id):
         # All Time Weekly Rate
         rate, count = 0, 0
+        # Get all employee's weekly rats
         emp_weekly_rates = WeeklyRate.objects.filter(employee=emp_id)
         if emp_weekly_rates.exists():
             for weekly_rate in emp_weekly_rates:
                 rate += weekly_rate.rate
                 count += 1
+        # Check to avoid ZeroDivisionError
         all_time_weekly_rate = 0 if count == 0 else rate/count
         del rate, count
 
@@ -141,12 +151,14 @@ def allTimeEvaluation(emp_id: int) -> float:
         empTasks = Task.objects.filter(employee=emp_id)
         if empTasks.exists():
             for task in empTasks:
+                # Get all employee's task rats
                 task_rate = TaskRate.objects.filter(task=task)
                 if task_rate.exists():
                     task_rate = task_rate[0]
                     rate += task_rate.rate
                     rate += task_rate.on_time_rate
                     count += 1
+        # Check to avoid ZeroDivisionError
         all_task_rate = 0 if count == 0 else (rate/count) / 2
         return round(((all_time_weekly_rate + all_task_rate) / 2), 2)
 
@@ -165,7 +177,8 @@ def getEvaluation(emp_id=-1) -> dict:
         dict: Employee/s evaluation
     """
     evaluation = {}
-    if emp_id != -1:  # if the employee specified
+    # if the employee specified
+    if emp_id != -1:  
         employee = Employee.objects.get(id=emp_id)
         evaluation = {'Employee': employee,
                       'MonthlyRate': monthlyRate(emp_id),
@@ -174,6 +187,7 @@ def getEvaluation(emp_id=-1) -> dict:
                       'MonthlyOverallEvaluation': monthlyOverallEvaluation(emp_id),
                       'AllTimeEvaluation': allTimeEvaluation(emp_id),
                       }
+    # if the employee not specified
     else:
         for employee in Employee.objects.all():
             emp_id = employee.id
@@ -190,54 +204,66 @@ def getEvaluation(emp_id=-1) -> dict:
 
 def allEmployeesWeeklyEvaluations():
     rate, count = 0, 0
+    # Get all employees except the CEO
     employees = Employee.objects.filter(~Q(position="CEO"))
     for employee in employees:
+        # Get all employees weekly rates
         emp_weekly_rate = weeklyRate(Week.getLastWeekID(), employee.id)
         if emp_weekly_rate:
             rate += emp_weekly_rate
             count += 1
+    # Check to avoid ZeroDivisionError
     try:
-        return rate/count
+        return round(rate/count, 2)
     except ZeroDivisionError:
         return 0
 
 def allEmployeesMonthlyEvaluations():
     rate, count = 0, 0
+    # Get all employees except the CEO
     employees = Employee.objects.filter(~Q(position="CEO"))
     for employee in employees:
+        # Get all employees monthly rates
         emp_monthly_rate = monthlyRate(employee.id)
         if emp_monthly_rate:
             rate += emp_monthly_rate
             count += 1
+    # Check to avoid ZeroDivisionError
     try:
-        return rate/count
+        return round(rate/count, 2)
     except ZeroDivisionError:
         return 0
 
 
 def allEmployeesMonthlyTaskRate():
     rate, count = 0, 0
+    # Get all employees except the CEO
     employees = Employee.objects.filter(~Q(position="CEO"))
     for employee in employees:
+        # Get all employees monthly task rates
         emp_monthly_rate = monthlyTaskRate(employee.id)
         if emp_monthly_rate:
             rate += emp_monthly_rate
             count += 1
+    # Check to avoid ZeroDivisionError
     try:
-        return rate/count
+        return round(rate/count, 2)
     except ZeroDivisionError:
         return 0
 
 
 def allEmployeesMonthlyOverallEvaluation():
     rate, count = 0, 0
+    # Get all employees except the CEO
     employees = Employee.objects.filter(~Q(position="CEO"))
     for employee in employees:
+        # Get all employees monthly overall rates
         emp_monthly_rate = monthlyOverallEvaluation(employee.id)
         if emp_monthly_rate:
             rate += emp_monthly_rate
             count += 1
+    # Check to avoid ZeroDivisionError
     try:
-        return rate/count
+        return round(rate/count, 2)
     except ZeroDivisionError:
         return 0

@@ -13,6 +13,7 @@ def createUserAccount(person: object, is_ceo=False):
         is_ceo (bool, optional): True if it is CEO. Defaults to False.
     """
     if is_ceo:
+        # Create super user for the ceo
         User.objects.create_superuser(
             username=person.name,
             password=person.name,
@@ -27,7 +28,7 @@ def createUserAccount(person: object, is_ceo=False):
                                  ).save()
 
 
-def onAddingNewEmployee(sender, instance, created, **kwargs):
+def onAddingUpdatingEmployee(sender, instance, created, **kwargs):
     """
     This function called every time a new employee added.
     It creates a user account and assigns the person object to the employee.
@@ -41,7 +42,6 @@ def onAddingNewEmployee(sender, instance, created, **kwargs):
             createUserAccount(person)
             account = User.objects.all().order_by('-id')[0]
             # The position of the Employee
-            # instance.account.groups.clear()  # delete the employee group
             Group.objects.get(name=instance.position).user_set.add(account)
             instance.account = account
             instance.person = person
@@ -52,21 +52,22 @@ def onAddingNewEmployee(sender, instance, created, **kwargs):
             person = Person.objects.all()[0]
             createUserAccount(person, is_ceo=True)
             super_user = User.objects.all()[0]
-            print(f"  Super User '{super_user.username}' was created.")
+            print(f"  Super User '{super_user.username}' was created.") # Print in console during migrating
             Group.objects.get(name=instance.position).user_set.add(super_user)
-            print(f"  The super user added to CEO group.")
+            print(f"  The super user added to CEO group.") # Print in console during migrating
             instance.account = super_user
             instance.person = person
             instance.save()
+    # On update
     else:
-        # On update
-        instance.account.groups.clear()  # delete the employee group
+        # delete the employee group
+        instance.account.groups.clear()  
         # assigning the employee with the new position
         Group.objects.get(
             name=instance.position).user_set.add(instance.account)
 
 
-def onAddingNewDistributor(sender, instance, created, **kwargs):
+def onAddingUpdatingDistributor(sender, instance, created, **kwargs):
     """
     This function called every time a new distributor added.
     It creates a user account, assigns the person object to the distributor, 

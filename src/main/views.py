@@ -9,7 +9,7 @@ from datetime import timedelta
 from human_resources.models import Employee, Task
 from .decorators import isAuthenticatedUser
 from .forms import CreateUserForm
-from .tasks import getEmployeesTasks
+from .utils import getEmployeesTasks as EmployeeTasks
 from .utils import getUserBaseTemplate as base
 
 
@@ -70,9 +70,9 @@ def createUserPage(request):
             messages.info(request, "Please sing in with your new account")
 
             return redirect('Index')
-    
+
     template = 'create_user.html'
-    context = {'form':form}
+    context = {'form': form}
     return render(request, template, context)
 
 
@@ -111,5 +111,5 @@ def tasks(request):
             )
 
     context = {'Tasks': Tasks, 'base': base(
-        request), 'getEmployeesTasks': getEmployeesTasks(request)}
+        request), 'EmployeeTasks': EmployeeTasks(request)}
     return render(request, 'tasks.html', context)

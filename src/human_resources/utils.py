@@ -22,3 +22,6 @@ def isUserAllowedToModify(user:User, employee_position_to_modify:str, employee_p
             return False
     
     return True
+
+
+isRequesterCEO = lambda request: True if request.user.groups.all()[0].name == "CEO" else False

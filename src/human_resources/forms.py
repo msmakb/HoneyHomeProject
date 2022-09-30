@@ -10,7 +10,7 @@ class DateInput(forms.DateInput):
 
 
 class DateTimeInput(forms.DateInput):
-    # Adjusting the date input
+    # Adjusting the date time input
     input_type = 'datetime-local'
 
 
@@ -88,8 +88,8 @@ class AddPersonForm(ModelForm):
     def clean_phone_number(self) -> str:
         """
         This function to validate the phone number inserted with the following format:
-        Format: '[+][1 to 3 numbers][space][9 to 14 numbers]'.
         The pattern format is not secure enough to be the only validator.
+        Format: [+][1 to 3 numbers][space][9 to 14 numbers].
 
         Raises:
             forms.ValidationError: The phone number must be started with '+'.
@@ -135,22 +135,19 @@ class EmployeePositionForm(ModelForm):
     def __init__(self, *args, **kwargs):
         super(EmployeePositionForm, self).__init__(*args, **kwargs)
 
-        POSITIONS = [
-            ('CEO', 'CEO'),
-            ('Human Resources', 'Human Resources'),
-            ('Warehouse Admin', 'Warehouse Admin'),
-            ('Accounting Manager', 'Accounting Manager'),
-            ('Social Media Manager', 'Social Media Manager'),
-            ('Designer', 'Designer'),
-        ]
+        # Get a copy list of employees positions
+        POSITIONS = Employee.POSITIONS.copy()
 
+        # Get all employees
         employees = Employee.objects.all()
         for employee in employees:
             existingPosition = employee.position
+            # This is on updating employee's record
             if 'instance' in kwargs:
+                # Ignore if the existing position is the instance position
                 if kwargs['instance'].position == existingPosition:
                     continue
-
+            # If the position is exists, remove it from available positions
             if (f'{existingPosition}', f'{existingPosition}') in POSITIONS:
                 POSITIONS.remove(
                     (f'{existingPosition}', f'{existingPosition}'))
@@ -177,25 +174,32 @@ class AddTaskForm(ModelForm):
     def __init__(self, requester_position, *args, **kwargs):
         super(AddTaskForm, self).__init__(*args, **kwargs)
 
+        # Get the current field's choices
         CHOICES = list(self.fields['employee'].choices)
 
         choices_to_remove = []
-
+        # Loop to get the choices to remove
         for choice in CHOICES:
+            # Avoid the first choice '......' from django
             if not choice[0]:
                 continue
             else:
+                # Get the employee position by there name
                 employee_position = Employee.objects.get(
                     person__name=choice[1]).position
+            # If it's CEO add the choice to be removed
             if employee_position == "CEO":
                 choices_to_remove.append(choice)
+            # If it's HR and the requester also the HR, add the choice to be removed
             if employee_position == "Human Resources":
                 if requester_position == "Human Resources":
                     choices_to_remove.append(choice)
 
+        # Remove the choices in 'choices_to_remove' list
         for choice in choices_to_remove:
             CHOICES.remove(choice)
 
+        # Update the choices list
         self.fields['employee'].choices = CHOICES
         self.fields['employee'].widget.choices = CHOICES
 
