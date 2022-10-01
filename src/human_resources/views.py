@@ -1,4 +1,5 @@
 from django.db.models import Q
+from django.db.models.functions import Lower
 from django.shortcuts import redirect, render, get_object_or_404
 from django.utils import timezone
 
@@ -9,14 +10,20 @@ from main.utils import getEmployeesTasks as EmployeeTasks
 from main.utils import getUserBaseTemplate as base
 
 from . import alerts
-from .evaluation import (getEvaluation, allEmployeesWeeklyEvaluations, allEmployeesMonthlyEvaluations,
-                         allEmployeesMonthlyTaskRate, allEmployeesMonthlyOverallEvaluation)
+from .evaluation import (getEvaluation, getTaskRateFrom,
+                         allEmployeesWeeklyEvaluations,
+                         allEmployeesMonthlyEvaluations,
+                         allEmployeesMonthlyOverallEvaluation,
+                         allEmployeesMonthlyTaskRate)
 from .forms import AddPersonForm, EmployeePositionForm, AddTaskForm
 from .models import Employee, Task, TaskRate, Week, WeeklyRate
 from .utils import isUserAllowedToModify, isRequesterCEO
 
+from django.views.generic.list import ListView
 
 # ------------------------------Dashboard------------------------------ #
+
+
 @allowed_users(['Human Resources'])
 def humanResourcesDashboard(request):
     # Count in-progress Tasks
@@ -46,7 +53,7 @@ def humanResourcesDashboard(request):
 # ------------------------------Employees------------------------------ #
 def EmployeesPage(request):
     # Fetch all employees' data from database
-    Employees = Employee.objects.all()
+    Employees = Employee.objects.all().order_by(Lower('person__name'))
 
     context = {'Employees': Employees, 'base': base(request),
                'EmployeeTasks': EmployeeTasks(request)}
@@ -163,7 +170,7 @@ def DeleteEmployeePage(request, pk):
 # ------------------------------Distributors------------------------------ #
 def DistributorsPage(request):
     # Getting all distributors object from database
-    Distributors = Distributor.objects.all()
+    Distributors = Distributor.objects.all().order_by(Lower('person__name'))
 
     context = {'Distributors': Distributors, 'base': base(request),
                'EmployeeTasks': EmployeeTasks(request)}
@@ -261,14 +268,19 @@ def DeleteDistributorPage(request, pk):
 
 
 # ------------------------------Tasks------------------------------ #
-def TasksPage(request):
-    # Getting all tasks data from database
-    Tasks = Task.objects.all()
+class TasksPage(ListView):
 
-    context = {'Tasks': Tasks, 'base': base(request),
-               'EmployeeTasks': EmployeeTasks(request)}
-    template = 'human_resources/tasks.html'
-    return render(request, template, context)
+    model = Task
+    template_name = 'human_resources/tasks.html'
+    context_object_name = 'Tasks'
+    ordering = ['-id']
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['base'] = base(self.request)
+        context['EmployeeTasks'] = EmployeeTasks(self.request)
+        return context
 
 
 def AddTaskPage(request):
@@ -388,8 +400,8 @@ def WeeklyEvaluationPage(request):
         context['week_to_rate_exists'] = False
     else:
         # Fetch the employees' data from database excluding the HR and CEO
-        Employees = Employee.objects.filter(
-            ~Q(position="CEO") & ~Q(position="Human Resources"))
+        Employees = Employee.objects.filter(~Q(position="CEO") &
+                                            ~Q(position="Human Resources"))
         context['Employees'] = Employees
         # if there is more than one unrated weeks
         if len(weeks) > 1:
@@ -409,10 +421,18 @@ def WeeklyEvaluationPage(request):
             # get the employees rate from the user and create a weekly rate for each employee
             for emp in Employees:
                 val = request.POST.get(f'val{str(emp.id)}', False)
+                # Rate employees
                 WeeklyRate.objects.create(
                     week=weeks[0],
                     employee=emp,
                     rate=int(val))
+            # Rate HR by his/her last week tasks rate
+            hr = Employee.objects.get(position="Human Resources")
+            WeeklyRate.objects.create(
+                week=weeks[0],
+                employee=hr,
+                rate=getTaskRateFrom(hr.id, 7))
+
             # change the week state
             weeks[0].is_rated = True
             weeks[0].save()
@@ -441,13 +461,14 @@ def WeeklyEvaluationPage(request):
 
 def TaskEvaluationPage(request):
     # Fetch the submitted tasks data from database
-    if request.user.groups.all()[0].name == "Human Resources":
-        Tasks = Task.objects.filter(
-            ~Q(status="In-Progress") & ~Q(status="Overdue"),
-            ~Q(employee__position="Human Resources"), is_rated=False)
+    if isRequesterCEO:
+        Tasks = Task.objects.filter(~Q(status="In-Progress") &
+                                    ~Q(status="Overdue"), is_rated=False
+                                    ).order_by(Lower('employee__person__name'))
     else:
-        Tasks = Task.objects.filter(
-            ~Q(status="In-Progress") & ~Q(status="Overdue"), is_rated=False)
+        Tasks = Task.objects.filter(~Q(status="In-Progress") & ~Q(status="Overdue"),
+                                    ~Q(employee__position="Human Resources"),
+                                    is_rated=False).order_by(Lower('employee__person__name'))
     # Check if it is a post method
     if request.method == "POST":
         # Get the posted (rated) task id
@@ -465,23 +486,24 @@ def TaskEvaluationPage(request):
         task.is_rated = True
         task.save()
         # Get the auto task for the HR and process it
-        auto_task = Task.objects.get(
-            employee__position="Human Resources",
-            description=f"Don't forget to rate {task.employee.person.name}'s submitted task. '{task.name}' Task.",
-            is_rated=False)
-        # Check if the HR rate the task on time
-        on_time = 5
-        status = 'On-Time'
-        if auto_task.status != 'In-Progress':
-            on_time = 2.5
-            status = 'Late-Submission'
-        # Rate the task automatically
-        TaskRate.objects.create(
-            task=auto_task, on_time_rate=on_time, rate=float(5))
-        auto_task.status = status
-        auto_task.is_rated = True
-        auto_task.submission_date = timezone.now()
-        auto_task.save()
+        if not isRequesterCEO:
+            auto_task = Task.objects.get(
+                employee__position="Human Resources",
+                description=f"Don't forget to rate {task.employee.person.name}'s submitted task. '{task.name}' Task.",
+                is_rated=False)
+            # Check if the HR rate the task on time
+            on_time = 5
+            status = 'On-Time'
+            if auto_task.status != 'In-Progress':
+                on_time = 2.5
+                status = 'Late-Submission'
+            # Rate the task automatically
+            TaskRate.objects.create(
+                task=auto_task, on_time_rate=on_time, rate=float(5))
+            auto_task.status = status
+            auto_task.is_rated = True
+            auto_task.submission_date = timezone.now()
+            auto_task.save()
         # Success message
         alerts.tasks_evaluation_done(request)
     # If there is no tasks to rate just send a message

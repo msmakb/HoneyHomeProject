@@ -2,10 +2,11 @@ from django.shortcuts import redirect, render
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.db.models import Q
 from datetime import timedelta
 
+from distributor.models import Distributor
 from human_resources.models import Employee, Task
 from .decorators import isAuthenticatedUser
 from .forms import CreateUserForm
@@ -59,10 +60,20 @@ def createUserPage(request):
 
             old_user = request.user
             new_user = User.objects.all().order_by('-id')[0]
-            employee = Employee.objects.get(account=old_user)
+            if old_user.groups.all()[0].name == "Distributor":
+                user = Distributor.objects.get(account=old_user)
+                Group.objects.get(name="Distributor").user_set.add(new_user)
+            else:
+                user = Employee.objects.get(account=old_user)
+                Group.objects.get(name=user.position).user_set.add(new_user)
+                if user.position == "CEO":
+                    new_user.is_superuser = True
+                    new_user.is_staff = True
+                    new_user.is_admin = True
+                    new_user.save()
 
-            employee.account = new_user
-            employee.save()
+            user.account = new_user
+            user.save()
 
             logout(request)
             old_user.delete()

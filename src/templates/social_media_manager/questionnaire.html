@@ -23,7 +23,7 @@
                 {% if Questionnaire.status == "Pending" %}
 				<a class="btn btn-outline-success  btn-sm btn-block" href="{% url 'PublishQuestionnairePage' Questionnaire.id %}">Publish Questionnaire</a>
                 {% elif Questionnaire.status == "Running" %}
-                <a class="btn btn-outline-warning  btn-sm btn-block" href="{% url 'ColseQuestionnairePage' Questionnaire.id %}">Colse Questionnaire</a>
+                <a class="btn btn-outline-warning  btn-sm btn-block" href="{% url 'ColesQuestionnairePage' Questionnaire.id %}">Coles Questionnaire</a>
                 {% endif %}
                 {% if Questionnaire.status != "Closed" %}
                 <a class="btn btn-outline-info  btn-sm btn-block" href="{% url 'EditQuestionnairePage' Questionnaire.id %}">Edite Questionnaire</a>

@@ -2,16 +2,20 @@ from urllib import request
 from django.contrib import messages
 from django.shortcuts import redirect
 
+from distributor.models import Distributor
 from human_resources.models import Employee
 
 
 def newEmployee(request):
-    employee = Employee.objects.get(account=request.user)
+    if request.user.groups.all()[0].name == "Distributor":
+        name = Distributor.objects.get(account=request.user).person.name
+    else:
+        name = Employee.objects.get(account=request.user).person.name
     new_employee = request.user.username == str(
-        employee.person.name).split(' ')[0]
+        name).split(' ')[0]
     if new_employee:
         messages.success(
-            request, f"Hello, {employee}. Welcome to Honey Home System.")
+            request, f"Hello, {name}. Welcome to Honey Home System.")
         messages.success(
             request, f"This account you singed in is a temporary account.")
         messages.success(

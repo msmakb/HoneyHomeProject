@@ -1,4 +1,5 @@
 from django.db.models import Q
+from django.db.models.functions import Lower
 from .models import Employee, Task, TaskRate, Week, WeeklyRate
 
 
@@ -33,7 +34,7 @@ def monthlyRate(emp_id: int) -> float:
     """
     if not newEmployee(emp_id):
         rate, count = 0, 0
-        # Get all weekly rates of the employee 
+        # Get all weekly rates of the employee
         emp_weekly_rates = WeeklyRate.objects.filter(
             employee=emp_id).order_by('-id')
         for i in emp_weekly_rates:
@@ -48,12 +49,12 @@ def monthlyRate(emp_id: int) -> float:
 
     return 0
 
-
-def monthlyTaskRate(emp_id: int) -> float:
+def getTaskRateFrom(emp_id: int, days: int) -> float:
     """
-    This function will return the monthly task rate of the employee 
-    by calculating the last 4 weeks' task rates, 
-    if the employee has no tasks or his tasks is not rated the function will return 0
+    This function returns the tasks rate of the employee 
+    from last the specified days the currant day
+    if the employee has no tasks or his tasks is not rated 
+    the function will return 0
 
     Args:
         emp_id (int): Employee ID
@@ -61,31 +62,43 @@ def monthlyTaskRate(emp_id: int) -> float:
     Returns:
         float: Monthly task rate
     """
-    if not newEmployee(emp_id):
-        from django.utils import timezone
-        from datetime import timedelta
+    from django.utils import timezone
+    from datetime import timedelta
 
-        rate, count = 0, 0
-        today = timezone.now()
-        # The date of the day before 30 days form today
-        end_date = today - timedelta(days=30)
-        # Get all employee's tasks last 30 days 
-        empTasks = Task.objects.filter(employee=emp_id,
-                                       receiving_date__range=[end_date, today])
-        if empTasks.exists():
-            for task in empTasks:
-                # Get the task rate of the task
-                task_rate = TaskRate.objects.filter(task=task)
-                if task_rate.exists():
-                    task_rate = task_rate[0]
-                    rate += task_rate.rate
-                    rate += task_rate.on_time_rate
-                    count += 1
-            # Check to avoid ZeroDivisionError
-            if count != 0:
-                return round(((rate/count) / 2), 2)
+    rate, count = 0, 0
+    today = timezone.now()
+    # The date of the day before the specified days form today
+    end_date = today - timedelta(days=days)
+    # Get all employee's tasks last specified days
+    empTasks = Task.objects.filter(employee=emp_id,
+                                   receiving_date__range=[end_date, today])
+    if empTasks.exists():
+        for task in empTasks:
+            # Get the task rate of the task
+            task_rate = TaskRate.objects.filter(task=task)
+            if task_rate.exists():
+                task_rate = task_rate[0]
+                rate += task_rate.rate
+                rate += task_rate.on_time_rate
+                count += 1
+        # Check to avoid ZeroDivisionError
+        if count != 0:
+            return round(((rate/count) / 2), 2)
 
     return 0
+
+def monthlyTaskRate(emp_id: int) -> float:
+    """
+    This function will return the monthly task rate of the employee 
+    by calculating the last 30 day's task rates, 
+
+    Args:
+        emp_id (int): Employee ID
+
+    Returns:
+        float: Monthly task rate
+    """
+    return getTaskRateFrom(emp_id, 30)
 
 
 def weeklyRate(week_id: int, emp_id: int) -> float:
@@ -120,8 +133,9 @@ def monthlyOverallEvaluation(emp_id: int) -> float:
     """
     if not newEmployee(emp_id):
         return round(((monthlyRate(emp_id) + monthlyTaskRate(emp_id)) / 2), 2)
+    else:
+        return monthlyTaskRate(emp_id)
 
-    return 0
 
 
 def allTimeEvaluation(emp_id: int) -> float:
@@ -133,36 +147,43 @@ def allTimeEvaluation(emp_id: int) -> float:
     Returns:
         float: All time evaluation
     """
-    if not newEmployee(emp_id):
-        # All Time Weekly Rate
-        rate, count = 0, 0
-        # Get all employee's weekly rats
-        emp_weekly_rates = WeeklyRate.objects.filter(employee=emp_id)
-        if emp_weekly_rates.exists():
-            for weekly_rate in emp_weekly_rates:
-                rate += weekly_rate.rate
+    # All Time Weekly Rate
+    rate, count = 0, 0
+    # Get all employee's weekly rats
+    emp_weekly_rates = WeeklyRate.objects.filter(employee=emp_id)
+    if emp_weekly_rates.exists():
+        for weekly_rate in emp_weekly_rates:
+            rate += weekly_rate.rate
+            count += 1
+    # Check to avoid ZeroDivisionError
+    all_time_weekly_rate = 0 if count == 0 else rate/count
+    del rate, count
+
+    # All Tasks Rate
+    rate, count = 0, 0
+    empTasks = Task.objects.filter(employee=emp_id)
+    if empTasks.exists():
+        for task in empTasks:
+            # Get all employee's task rats
+            task_rate = TaskRate.objects.filter(task=task)
+            if task_rate.exists():
+                task_rate = task_rate[0]
+                rate += task_rate.rate
+                rate += task_rate.on_time_rate
                 count += 1
-        # Check to avoid ZeroDivisionError
-        all_time_weekly_rate = 0 if count == 0 else rate/count
-        del rate, count
+    # Check to avoid ZeroDivisionError
+    all_task_rate = 0 if count == 0 else (rate/count) / 2
 
-        # All Tasks Rate
-        rate, count = 0, 0
-        empTasks = Task.objects.filter(employee=emp_id)
-        if empTasks.exists():
-            for task in empTasks:
-                # Get all employee's task rats
-                task_rate = TaskRate.objects.filter(task=task)
-                if task_rate.exists():
-                    task_rate = task_rate[0]
-                    rate += task_rate.rate
-                    rate += task_rate.on_time_rate
-                    count += 1
+    if not all_time_weekly_rate:
+        return round(all_task_rate, 2)
+    elif not all_task_rate:
+        return round(all_time_weekly_rate, 2)
+    else:
         # Check to avoid ZeroDivisionError
-        all_task_rate = 0 if count == 0 else (rate/count) / 2
-        return round(((all_time_weekly_rate + all_task_rate) / 2), 2)
-
-    return 0
+        try:
+            return round(((all_time_weekly_rate + all_task_rate) / 2), 2)
+        except ZeroDivisionError:
+            return 0
 
 
 def getEvaluation(emp_id=-1) -> dict:
@@ -178,7 +199,7 @@ def getEvaluation(emp_id=-1) -> dict:
     """
     evaluation = {}
     # if the employee specified
-    if emp_id != -1:  
+    if emp_id != -1:
         employee = Employee.objects.get(id=emp_id)
         evaluation = {'Employee': employee,
                       'MonthlyRate': monthlyRate(emp_id),
@@ -189,7 +210,7 @@ def getEvaluation(emp_id=-1) -> dict:
                       }
     # if the employee not specified
     else:
-        for employee in Employee.objects.all():
+        for employee in Employee.objects.filter(~Q(position="CEO")).order_by(Lower('person__name')):
             emp_id = employee.id
             evaluation[employee.person.name] = {'Employee': employee,
                                                 'MonthlyRate': monthlyRate(emp_id),
@@ -217,6 +238,7 @@ def allEmployeesWeeklyEvaluations():
         return round(rate/count, 2)
     except ZeroDivisionError:
         return 0
+
 
 def allEmployeesMonthlyEvaluations():
     rate, count = 0, 0

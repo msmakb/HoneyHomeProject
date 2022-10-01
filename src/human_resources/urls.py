@@ -22,7 +22,7 @@ urlpatterns = [
     path('Distributor/Delete/<str:pk>', views.DeleteDistributorPage, name="DeleteDistributorPage"),
 
     # ----------------------------Tasks URLs---------------------------------- #
-    path('Tasks', views.TasksPage, name="TasksPage"),
+    path('Tasks', views.TasksPage.as_view(), name="TasksPage"),
     path('Task/Add-Task', views.AddTaskPage, name="AddTaskPage"),
     path('Task/<str:pk>', views.TaskPage, name="TaskPage"),
     path('Task/Update/<str:pk>', views.UpdateTaskPage, name="UpdateTaskPage"),

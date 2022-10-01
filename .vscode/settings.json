@@ -23,6 +23,7 @@
       "**/requirements{/**,*}.{txt,in}": "pip-requirements"
    },
    "cSpell.words": [
+      "shopee",
       "unsubmitted"
    ],
 }

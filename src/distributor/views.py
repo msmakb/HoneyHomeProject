@@ -82,7 +82,7 @@ def FreezeItemPage(request):
             else:
                 messages.info(request, "Item or quantity is not available in the stock")
                 return redirect('ReturnItemPage')
-        messages.success(request, f"Item has been successfuly Frozen")
+        messages.success(request, f"Item has been successfully Frozen")
         return redirect('ReturnItemPage')
     context = {'availableItems':availableItems, 'form':form}
     return render(request, 'distributor/freeze_item.html', context)
@@ -139,7 +139,7 @@ def ReturnItemPage(request):
             else:
                 messages.info(request, "Item or quantity is not available in the stock")
                 return redirect('ReturnItemPage')
-        messages.success(request, f"Item has been successfuly sended to {receiver_name}")
+        messages.success(request, f"Item has been successfully sended to {receiver_name}")
         return redirect('ReturnItemPage')
     context = {'availableItems':availableItems, 'form':form}
     return render(request, 'distributor/return_item.html', context)

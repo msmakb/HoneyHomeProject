@@ -52,19 +52,21 @@ def onAddingUpdatingEmployee(sender, instance, created, **kwargs):
             person = Person.objects.all()[0]
             createUserAccount(person, is_ceo=True)
             super_user = User.objects.all()[0]
-            print(f"  Super User '{super_user.username}' was created.") # Print in console during migrating
+            # Print in console during migrating
+            print(f"  Super User '{super_user.username}' was created.")
             Group.objects.get(name=instance.position).user_set.add(super_user)
-            print(f"  The super user added to CEO group.") # Print in console during migrating
+            # Print in console during migrating
+            print(f"  The super user added to CEO group.")
             instance.account = super_user
             instance.person = person
             instance.save()
     # On update
     else:
         # delete the employee group
-        instance.account.groups.clear()  
+        instance.account.groups.clear()
         # assigning the employee with the new position
-        Group.objects.get(
-            name=instance.position).user_set.add(instance.account)
+        Group.objects.get(name=instance.position
+                          ).user_set.add(instance.account)
 
 
 def onAddingUpdatingDistributor(sender, instance, created, **kwargs):
