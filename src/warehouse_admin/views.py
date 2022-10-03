@@ -1,52 +1,108 @@
 from django.contrib import messages
+from django.db.models.functions import Lower
 from django.shortcuts import redirect, render
 
 from distributor.models import Distributor
 from main.decorators import allowed_users
 from main.utils import getEmployeesTasks as EmployeeTasks
 from main.utils import getUserBaseTemplate as base
+from main.utils import Pagination
 
 from .models import (ItemCard, RetailCard, Stock, ItemType, Batch,
                      GoodsMovement, RetailItem)
 from .forms import (AddGoodsForm, RegisterItemForm, AddBatchForm,
                     SendGoodsForm, AddRetailGoodsForm, ConvertToRetailForm)
 
+MAIN_STORAGE_ID = 1
+
 
 # ----------------------------Dashboard------------------------------
 @allowed_users(allowed_roles=['Admin', 'Warehouse Admin'])
 def warehouseAdminDashboard(request):
     goodsMovement = GoodsMovement.objects.all().order_by('-id')[:3]
+
     context = {'GoodsMovement': goodsMovement,
                'EmployeeTasks': EmployeeTasks(request)}
-    return render(request, 'warehouse_admin/dashboard.html', context)
+    template = 'warehouse_admin/dashboard.html'
+    return render(request, template, context)
+
+
 # --------------------------Main Storage-----------------------------
-
-
 def MainStorageGoodsPage(request):
-    MainStorageStock = Stock.objects.filter(id=1)[0]
+    # Getting the main storage goods
     Items = ItemCard.objects.filter(
-        stock=MainStorageStock, status='Good', is_transforming=False).order_by('type')
-    context = {'Items': Items,
-               'base': base(request), 'EmployeeTasks': EmployeeTasks(request)}
-    return render(request, 'warehouse_admin/main_storage_goods.html', context)
+        stock__id=MAIN_STORAGE_ID,
+        status='Good',
+        is_transforming=False
+    ).order_by(Lower('type__name'))
+    items_list = []
+    # Below is a function to combine cards with same name
+    for item in Items:
+        # loop through the objects in the items list
+        for obj in items_list:
+            # If the item is in the list just add the quantity
+            if obj['type'] == item.type.name:
+                obj['quantity'] += item.quantity
+                # Check if the batch added to the batches list
+                for index, batch in enumerate(obj['batch']):
+                    # If the batch is present then add the quantity
+                    if batch[0] == item.batch.name:
+                        obj['batch'][index][1] += item.quantity
+                        break
+                else:
+                    # If there is no batch list, create it
+                    obj['batch'].append([item.batch.name, item.quantity])
+                break
+        else:
+            # If the item object ins not in the list, create it
+            obj = {'type': item.type.name,
+                   'batch': [[item.batch.name, item.quantity], ],
+                   'quantity': item.quantity}
+            items_list.append(obj)
+    # Get the page number and initialize the pagination object
+    page = request.GET.get('page')
+    pagination = Pagination(items_list, page)
+    # Get the page object and 'is paginated' function
+    page_obj = pagination.getPageObject()
+    is_paginated = pagination.isPaginated
+
+    context = {'page_obj': page_obj, 'is_paginated': is_paginated, 'base': base(
+        request), 'EmployeeTasks': EmployeeTasks(request)}
+    template = 'warehouse_admin/main_storage_goods.html'
+    return render(request, template, context)
+
+
+def DetailItemCardsPage(request, type):
+    # Getting the main storage cards with the specified type
+    Items = ItemCard.objects.filter(
+        stock__id=MAIN_STORAGE_ID,
+        type__name=type,
+        status='Good',
+        is_transforming=False
+    ).order_by('-receiving_date')
+    # Get the page number and initialize the pagination object
+    page = request.GET.get('page')
+    pagination = Pagination(Items, page)
+    # Get the page object and 'is paginated' function
+    page_obj = pagination.getPageObject()
+    is_paginated = pagination.isPaginated
+
+    context = {'page_obj': page_obj, 'is_paginated': is_paginated, 'base': base(
+        request), 'EmployeeTasks': EmployeeTasks(request)}
+    template = 'warehouse_admin/detail_item_cards.html'
+    return render(request, template, context)
 
 
 def AddGoodsPage(request):
+    stock = Stock.objects.get(id=MAIN_STORAGE_ID)
     form = AddGoodsForm()
-    MainStorageStock = Stock.objects.filter(id=1)[0]
     if request.method == "POST":
-        form = AddGoodsForm(request.POST)
+        updated_request = request.POST.copy()
+        updated_request.update({'stock': stock})
+        form = AddGoodsForm(updated_request)
         if form.is_valid:
-            type = form['type'].value()
-            batch = form['batch'].value()
-            quantity = form['quantity'].value()
-            received_from = form['received_from'].value()
-            ItemCard.objects.create(type=ItemType.objects.get(id=type),
-                                    batch=Batch.objects.get(id=batch),
-                                    stock=MainStorageStock,
-                                    quantity=quantity,
-                                    status='Good',
-                                    received_from=received_from)
+            form.save()
+
         return redirect('MainStorageGoodsPage')
 
     context = {'form': form, 'base': base(

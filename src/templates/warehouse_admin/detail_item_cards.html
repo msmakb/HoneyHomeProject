@@ -12,7 +12,8 @@
         <th scope="col">ITEM</th>
         <th scope="col">BATCHES</th>
         <th scope="col">QUANTITY</th>
-        <th scope="col">DETAILS</th>
+        <th scope="col">RECIVING DATE</th>
+        <th scope="col">RECEIVED FROM</th>
     </tr>
     </thead>
     <tbody>
@@ -20,13 +21,10 @@
     <tr>
         <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
         <td>{{ item.type }}</td>
-        <td>
-          {% for batch in item.batch %}
-            <p style="margin: auto;"><small>{{ batch.0 }}: {{ batch.1 }}</small></p>
-          {% endfor %}
-        </td>
+        <td>{{ item.batch }}</td>
         <td>{{ item.quantity }}</td>
-        <td><a class="btn btn-sm btn-info" href="{% url 'DetailItemCardsPage' item.type %}">Show</a></td>
+        <td>{{ item.receiving_date }}</td>
+        <td>{{ item.received_from }}</td>
     </tr>
     {% endfor %}
     </tbody>
